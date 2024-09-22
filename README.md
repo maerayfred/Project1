@@ -1,5 +1,3 @@
 # Project1
 
-[project1.pdf](project1.pdf)
-
-
+<a href="project1.pdf" target="_blank">project1.pdf</a>
