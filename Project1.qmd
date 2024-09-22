@@ -7,7 +7,7 @@ editor: source
 ## Data Processing
 
 ```{r}
-#| echo: false
+#| output: false
 # Calling libraries
 library(tidyverse)
 library(tidycensus)
@@ -26,8 +26,8 @@ str(id_info, max.level = 1)
 
 ```{r}
 ## Creating a tibble to view API information
-parsed<-fromJSON(rawToChar(id_info$content))
-info2<-as_tibble(parsed$dataset)
+parsed <- fromJSON(rawToChar(id_info$content))
+info2 <- as_tibble(parsed$dataset)
 info2
 ```
 
