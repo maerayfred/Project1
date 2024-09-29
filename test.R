@@ -16,6 +16,32 @@ build_url <- function(year="2022", get_vals=c("AGEP", "PWGTP", "SEX"), for_val="
   return(glue("{BASE_URL}?{suffix}"))
 }
 
+
+fix_time_interval_categories <- function(item, value_list) {
+  sorted_item <- item[sort(names(item))]
+  item_values <- pivot_longer(as.data.frame(sorted_item), cols=everything(), names_to=NULL, values_to="time_intervals")
+  item_df <- pivot_longer(as.data.frame(item_values), cols=everything(), names_to=NULL, values_to="time_intervals")
+  item_df_transformed <- item_df[-1,] |>
+      separate_wider_delim(cols="time_intervals", delim=" to ", names=c("left", "right")) |>
+      mutate(left = gsub("a.m.", "AM", gsub("p.m.", "PM", left)),
+           right = gsub("a.m.", "AM", gsub("p.m.", "PM", right))) |>
+      mutate(left = parse_date_time(left, orders = "I:M p", tz = "UTC"),
+           right = parse_date_time(right, orders = "I:M p", tz = "UTC")) |>
+      mutate(midpoint = format(left + (right - left)/2, "%H:%M:%S")) |>
+    select("midpoint")
+
+  value_map <- c()
+  for (value in value_list) {
+    if (value == "0") {
+      value_map <- c(value_map, "NA")
+      next
+    }
+    value_map <- c(value_map, item_df_transformed$midpoint[as.numeric(value)])
+  }
+  return(value_list=value_map)
+}
+
+
 get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX")) {
   if (!("PWGTP" %in% variables)) {
     variables <- c(variables, "PWGTP")
@@ -48,10 +74,13 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX")) {
   for (var in variables) {
     if (!is.null(var_data[[var]]$values$range)) {
       numeric_items <- c(numeric_items, var)
-      # print(paste(var, "is numeric", sep=" "))
+      print(paste(var, "is numeric", sep=" "))
+    } else if (var %in% c("JWAP", "JWDP")) {
+      numeric_items <- c(numeric_items, var)
+      print(paste(var, "is numeric", sep=" "))
     } else {
       categorical_items <- c(categorical_items, var)
-      # print(paste(var, "is categorical", sep=" "))
+      print(paste(var, "is categorical", sep=" "))
     }
   }
 
@@ -75,11 +104,42 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX")) {
   parsed_tibble <- as_tibble(parsed[-1,])
   colnames(parsed_tibble) <- parsed[1,]
 
+  parsed_tibble$JWAP_fixed <- fix_time_interval_categories(var_data$JWAP$values$item, parsed_tibble$JWAP)
+  parsed_tibble$JWDP_fixed <- fix_time_interval_categories(var_data$JWDP$values$item, parsed_tibble$JWDP)
+
+
   return(list(parsed=parsed_tibble, var_info=var_data, var_info_tibble=var_info_tibble))
 }
 
 return_data <- get_data(variables = c("AGEP", "PWGTP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP", "SEX", "FER", "HHL", "HISPEED", "JWTRNS", "SCH", "SCHL"))
 
-JWAP_values <- return_data$var_info$JWAP$values$item[sort(names(return_data$var_info$JWAP$values$item))]
-JWAP_df <- pivot_longer(as.data.frame(JWAP_values), cols=everything(), names_to="JWAP", values_to="time_intervals")
-JWAP_wider <- separate_wider_delim(JWAP_df[-1,], cols="time_intervals", delim=". to ", names=c("left", "right"))
+# JWAP_values <- return_data$var_info$JWAP$values$item[sort(names(return_data$var_info$JWAP$values$item))]
+# JWAP_df <- pivot_longer(as.data.frame(JWAP_values), cols=everything(), names_to=NULL, values_to="time_intervals")
+# JWAP_df_transformed <- JWAP_df[-1,] |>
+#   separate_wider_delim(cols="time_intervals", delim=" to ", names=c("left", "right")) |>
+#   mutate(left = gsub("a.m.", "AM", gsub("p.m.", "PM", left)),
+#          right = gsub("a.m.", "AM", gsub("p.m.", "PM", right))) |>
+#   mutate(left = parse_date_time(left, orders = "I:M p", tz = "UTC"),
+#          right = parse_date_time(right, orders = "I:M p", tz = "UTC")) |>
+#   mutate(midpoint = format(left + (right - left)/2, "%H:%M:%S")) |>
+#   separate_wider_delim(cols="midpoint", delim=":", names=c("hour", "minute", "second")) |>
+#   select("hour", "minute")
+#
+# value <- my_func(return_data$var_info$JWAP$values$item, return_data$parsed$JWAP)
+#
+#
+# JWDP_values <- return_data$var_info$JWDP$values$item[sort(names(return_data$var_info$JWDP$values$item))]
+# JWDP_df <- pivot_longer(as.data.frame(JWDP_values), cols=everything(), names_to=NULL, values_to="time_intervals")
+# JWDP_df_transformed <- JWDP_df[-1,] |>
+#   separate_wider_delim(cols="time_intervals", delim=" to ", names=c("left", "right")) |>
+#   mutate(left = gsub("a.m.", "AM", gsub("p.m.", "PM", left)),
+#          right = gsub("a.m.", "AM", gsub("p.m.", "PM", right))) |>
+#   mutate(left = parse_date_time(left, orders = "I:M p", tz = "UTC"),
+#          right = parse_date_time(right, orders = "I:M p", tz = "UTC")) |>
+#   mutate(midpoint = format(left + (right - left)/2, "%H:%M:%S")) |>
+#   # separate_wider_delim(cols="midpoint", delim=":", names=c("hour", "minute", "second")) |>
+#   select("midpoint")
+#   # select("hour", "minute")
+#
+# value <- my_func(return_data$var_info$JWAP$values$item, return_data$parsed$JWAP)
+# table(return_data$parsed$JWDP)
