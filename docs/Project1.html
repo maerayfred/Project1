@@ -133,26 +133,56 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="quarto" class="level2">
-<h2 class="anchored" data-anchor-id="quarto">Quarto</h2>
-<p>Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <a href="https://quarto.org" class="uri">https://quarto.org</a>.</p>
-</section>
-<section id="running-code" class="level2">
-<h2 class="anchored" data-anchor-id="running-code">Running Code</h2>
-<p>When you click the <strong>Render</strong> button a document will be generated that includes both content and the output of embedded code. You can embed code like this:</p>
+<section id="data-processing" class="level2">
+<h2 class="anchored" data-anchor-id="data-processing">Data Processing</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="sc">+</span> <span class="dv">1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 2</code></pre>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calling libraries</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidycensus)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(httr)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(jsonlite)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</div>
-<p>You can add options to executable code like this</p>
 <div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Utilizing Get Function to get information from API</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>URL <span class="ot">&lt;-</span> <span class="st">"https://api.census.gov/data/2004/acs/acs1/pums"</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>id_info <span class="ot">&lt;-</span> httr<span class="sc">::</span><span class="fu">GET</span>(URL)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(id_info, <span class="at">max.level =</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 4</code></pre>
+<pre><code>List of 10
+ $ url        : chr "https://api.census.gov/data/2004/acs/acs1/pums"
+ $ status_code: int 200
+ $ headers    :List of 12
+  ..- attr(*, "class")= chr [1:2] "insensitive" "list"
+ $ all_headers:List of 1
+ $ cookies    :'data.frame':    1 obs. of  7 variables:
+ $ content    : raw [1:3603] 7b 0a 20 20 ...
+ $ date       : POSIXct[1:1], format: "2024-09-22 19:50:09"
+ $ times      : Named num [1:6] 0 0.00368 0.02106 0.06661 0.08543 ...
+  ..- attr(*, "names")= chr [1:6] "redirect" "namelookup" "connect" "pretransfer" ...
+ $ request    :List of 7
+  ..- attr(*, "class")= chr "request"
+ $ handle     :Class 'curl_handle' &lt;externalptr&gt; 
+ - attr(*, "class")= chr "response"</code></pre>
 </div>
 </div>
-<p>The <code>echo: false</code> option disables the printing of code (only output is displayed).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Creating a tibble to view API information</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>parsed <span class="ot">&lt;-</span> <span class="fu">fromJSON</span>(<span class="fu">rawToChar</span>(id_info<span class="sc">$</span>content))</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>info2 <span class="ot">&lt;-</span> <span class="fu">as_tibble</span>(parsed<span class="sc">$</span>dataset)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>info2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 26
+  c_vintage c_dataset c_geographyLink  c_variablesLink c_tagsLink c_examplesLink
+      &lt;int&gt; &lt;list&gt;    &lt;chr&gt;            &lt;chr&gt;           &lt;chr&gt;      &lt;chr&gt;         
+1      2004 &lt;chr [3]&gt; http://api.cens… http://api.cen… http://ap… http://api.ce…
+# ℹ 20 more variables: c_groupsLink &lt;chr&gt;, c_sorts_url &lt;chr&gt;,
+#   c_documentationLink &lt;chr&gt;, c_isMicrodata &lt;lgl&gt;, c_isCube &lt;lgl&gt;,
+#   c_isAvailable &lt;lgl&gt;, `@type` &lt;chr&gt;, title &lt;chr&gt;, accessLevel &lt;chr&gt;,
+#   bureauCode &lt;list&gt;, description &lt;chr&gt;, distribution &lt;list&gt;,
+#   contactPoint &lt;df[,2]&gt;, identifier &lt;chr&gt;, keyword &lt;list&gt;, license &lt;chr&gt;,
+#   modified &lt;chr&gt;, programCode &lt;list&gt;, references &lt;list&gt;, publisher &lt;df[,3]&gt;</code></pre>
+</div>
+</div>
 
 
 </section>
