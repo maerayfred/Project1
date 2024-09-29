@@ -55,3 +55,5 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX")) {
 }
 
 return_data <- get_data()
+
+return_data$var_info$AGEP$values

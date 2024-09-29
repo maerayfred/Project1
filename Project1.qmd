@@ -18,7 +18,7 @@ library(jsonlite)
 
 ```{r}
 ## Utilizing Get Function to get information from API
-URL <- "https://api.census.gov/data/2004/acs/acs1/pums"
+URL <- "https://api.census.gov/data/2005/acs/acs1/pums?get=SEX,PWGTP,MAR&for=state:10&SCHL=16"
 id_info <- httr::GET(URL)
 str(id_info, max.level = 1)
 
@@ -27,8 +27,10 @@ str(id_info, max.level = 1)
 ```{r}
 ## Creating a tibble to view API information
 parsed <- fromJSON(rawToChar(id_info$content))
-info2 <- as_tibble(parsed$dataset)
-info2
+
+info2 <- as_tibble(parsed[-1,])
+colnames(info2)<-parsed[1,]
+
 ```
 
 
