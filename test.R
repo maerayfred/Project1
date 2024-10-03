@@ -144,16 +144,19 @@ colnames(example_parsed_tibble) <- example_parsed_data[1,]
 example_parsed_tibble$JWAP_fixed <- fix_time_interval_categories(example_filtered_var_list$JWAP$values$item, example_parsed_tibble$JWAP)
 example_parsed_tibble$JWDP_fixed <- fix_time_interval_categories(example_filtered_var_list$JWDP$values$item, example_parsed_tibble$JWDP)
 
-is_valid_variable_input <- function(given_list, valid_list) {
+is_valid_variable_input <- function(given_list, valid_list, sep="=", with_delim=FALSE) {
   strip_value <- function(element) {
-      return(strsplit(element, "=")[[1]][1])
+    if (with_delim) {
+      return(substr(element, 1, regexpr(sep, element)))
+    }
+    return(strsplit(element, sep)[[1]][1])
   }
 
   # does it match any of the items in the valid list
   # all the items must match an item in the valid list
   # ^ ensures it's the start of the string
-  if (!all(sapply(given_list, function(x) any(grepl(paste0("^", strip_value(x)), valid_list))))) {
-      return (FALSE)
+  if (!all(sapply(given_list, function(x) any(grepl(paste0("^", strip_value(x), "$"), valid_list))))) {
+    return (FALSE)
   }
   return (TRUE)
 }
@@ -166,6 +169,12 @@ is_valid_variable_input(
   c("^AGEP", "PWGTP", "SAX=1"),
   c("AGEP", "PWGTP", "SEX")
 )
+is_valid_variable_input(
+  "state:",
+  c("state:", "region:", "division:"),
+  sep=":",
+  with_delim=TRUE
+)
 
 get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography_level="all") {
   # check if PWGTP is provided in the variable list. May be PWGTP=30 or PWGTP=30,50
@@ -176,24 +185,19 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
   # ensure year is between 2010 and 2022 (inclusive)
   year_options <- c(2010:2022)
   if (!year %in% year_options) {
-    stop(glue("Invalid year {year}, should be one of {glue_collapse(year_options, sep=', ')}"))
+    stop(glue("Invalid year {year}, should be one of [{glue_collapse(year_options, sep=', ')}]"))
   }
 
   # ensure variables is in the desired set given
   variable_options <- c("AGEP", "PWGTP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP", "SEX", "FER", "HHL", "HISPEED", "JWTRNS", "SCH", "SCHL")
   if (!is_valid_variable_input(variables, variable_options)) {
-    stop(glue("Invalid variable in {glue_collapse(variables, sep=', ')}, valid options {glue_collapse(variable_options, sep=', ')}"))
+    stop(glue("Invalid variable in [{glue_collapse(variables, sep=', ')}], valid options [{glue_collapse(variable_options, sep=', ')}]"))
   }
 
   geography_options <- c("state:", "region:", "division:")
-  print(geography_level)
-  print(geography_options)
-  print(geography_level != "all")
-  print(paste0("^", geography_level))
-  print(any(grepl(paste0("^", geography_level), geography_options))) # TODO need to split
 
-  if (geography_level != "all" & !any(grepl(paste0("^", geography_level), geography_options))) {
-    stop(glue("Invalid geography level {geography_level}, should be 'all' or one of {glue_collapse(geography_options, sep=', ')}"))
+  if (geography_level != "all" & !is_valid_variable_input(geography_level, geography_options, sep=":", with_delim=TRUE)) {
+    stop(glue("Invalid geography level {geography_level}, should be 'all' or one of [{glue_collapse(geography_options, sep=', ')}]"))
   }
 
   var_info_tibble <- get_variable_list(year)
@@ -212,6 +216,7 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
 
   numeric_items_count <- 0
   categorical_items_count <- 0
+  numeric_item_list <- c()
 
   # check and filter the passed in variables
   for (var in variables) {
@@ -221,26 +226,32 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
     print(paste(var, values, sep=" "))
 
     if (is_numeric_variable(var, filtered_var_info)) {
+      numeric_item_list <- c(numeric_item_list, var)
       numeric_items_count <- numeric_items_count + 1
     } else {
       categorical_items_count <- categorical_items_count + 1
     }
     print(get_valid_variable_values(var, filtered_var_info))
   }
-  return()
 
   if (numeric_items_count <= 1) {
-    numeric_items <- c("AGEP", "PWGTP")
+    variables <- c(variables, "AGEP")
+    numeric_item_list <- c(numeric_item_list, "AGEP")
   }
 
   if (categorical_items_count == 0) {
-    categorical_items <- c("SEX")
+    variables <- c(variables, "SEX")
   }
 
-  variables <- c(numeric_items, categorical_items)
+  var_with_filter <- c()
+  for (var in variables) {
+    if (regexpr("=|:", var) != -1) {
+      var_with_filter <- c(var_with_filter, var)
+      variables <- variables[variables != var]
+    }
+  }
 
-
-  URL <- build_url(year=year, get_vals=variables)
+  URL <- build_url(year=year, get_vals=variables, get_vals_subset=var_with_filter, for_val=geography_level)
   id_info <- httr::GET(URL)
 
   ## Creating a tibble to view API information
@@ -249,16 +260,26 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
   parsed_tibble <- as_tibble(parsed[-1,])
   colnames(parsed_tibble) <- parsed[1,]
 
-  parsed_tibble$JWAP_fixed <- fix_time_interval_categories(filtered_var_info$JWAP$values$item, parsed_tibble$JWAP)
-  parsed_tibble$JWDP_fixed <- fix_time_interval_categories(filtered_var_info$JWDP$values$item, parsed_tibble$JWDP)
+  if ("JWAP" %in% variables) {
+    parsed_tibble$JWAP <- fix_time_interval_categories(filtered_var_info$JWAP$values$item, parsed_tibble$JWAP)
+  }
+  if ("JWDP" %in% variables) {
+    parsed_tibble$JWDP <- fix_time_interval_categories(filtered_var_info$JWDP$values$item, parsed_tibble$JWDP)
+  }
+  print(numeric_item_list)
+  print(numeric_item_list[!numeric_item_list %in% c("JWDP", "JWAP")])
 
+  parsed_tibble <- parsed_tibble |>
+    mutate(across(all_of(numeric_item_list[!numeric_item_list %in% c("JWDP", "JWAP")]), as.integer))
 
-  return(list(parsed=parsed_tibble, var_info=filtered_var_info, var_info_tibble=var_info_tibble))
+  return(list(parsed=parsed_tibble, var_info=filtered_var_info, var_info_tibble=var_info_tibble, URL=URL))
 }
 
 return_data <- get_data(
   year=2022,
-  variables = c("AGEP=10,11", "PWGTP", "GASP", "SEX", "AGEP=13"),
+  # variables = c("AGEP=10,11", "PWGTP", "GASP", "SEX", "AGEP=13"),
+  variables=c("GASP", "GRPIP=10:20", "JWDP"),
   geography_level = "state:10"
 )
-
+print(return_data$URL)
+str(return_data$parsed)
