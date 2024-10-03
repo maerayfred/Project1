@@ -5,6 +5,7 @@ library(jsonlite)
 library(glue)
 
 # remove empty string from list
+# TODO cannot handle get_vals being empty
 build_url <- function(year="2022", get_vals=c("AGEP", "PWGTP", "SEX"), get_vals_subset=c(), for_val="state:10") {
   BASE_URL <- glue("https://api.census.gov/data/{year}/acs/acs1/pums")
   get_vals_csv <- paste(get_vals, collapse=",")
@@ -178,7 +179,7 @@ is_valid_variable_input(
 
 get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography_level="all") {
   # check if PWGTP is provided in the variable list. May be PWGTP=30 or PWGTP=30,50
-  if (!any(grepl("^PWGTP(=|$)", variables))) {
+  if (!any(grepl("^PWGTP$", variables))) {
     variables <- c(variables, "PWGTP")
   }
 
@@ -237,15 +238,19 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
   if (numeric_items_count <= 1) {
     variables <- c(variables, "AGEP")
     numeric_item_list <- c(numeric_item_list, "AGEP")
+    print("AGEP NA")
+    print(get_valid_variable_values("AGEP", filtered_var_info))
   }
 
   if (categorical_items_count == 0) {
     variables <- c(variables, "SEX")
+    print("SEX NA")
+    print(get_valid_variable_values("SEX", filtered_var_info))
   }
 
   var_with_filter <- c()
   for (var in variables) {
-    if (regexpr("=|:", var) != -1) {
+    if (regexpr("=", var) != -1) {
       var_with_filter <- c(var_with_filter, var)
       variables <- variables[variables != var]
     }
@@ -260,14 +265,15 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
   parsed_tibble <- as_tibble(parsed[-1,])
   colnames(parsed_tibble) <- parsed[1,]
 
-  if ("JWAP" %in% variables) {
+  # TODO JWAP and JWDP where a range was provided like JWAP=1:20
+  if ("JWAP" %in% names(parsed_tibble)) {
     parsed_tibble$JWAP <- fix_time_interval_categories(filtered_var_info$JWAP$values$item, parsed_tibble$JWAP)
   }
-  if ("JWDP" %in% variables) {
+  if ("JWDP" %in% names(parsed_tibble)) {
     parsed_tibble$JWDP <- fix_time_interval_categories(filtered_var_info$JWDP$values$item, parsed_tibble$JWDP)
   }
-  print(numeric_item_list)
-  print(numeric_item_list[!numeric_item_list %in% c("JWDP", "JWAP")])
+  print(glue("Numeric item list, gets converted to int - [{glue_collapse(numeric_item_list, sep=', ')}]"))
+  print(glue("List without JWAP and JWDP - [{glue_collapse(numeric_item_list[!numeric_item_list %in% c('JWDP', 'JWAP')], sep=', ')}]"))
 
   parsed_tibble <- parsed_tibble |>
     mutate(across(all_of(numeric_item_list[!numeric_item_list %in% c("JWDP", "JWAP")]), as.integer))
@@ -275,11 +281,21 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
   return(list(parsed=parsed_tibble, var_info=filtered_var_info, var_info_tibble=var_info_tibble, URL=URL))
 }
 
+year <- readline(prompt="enter year: ")
+year <- ifelse(year == "", "2022", year)
+variable_list <- c()
+while ( (val <- readline(prompt="enter variable: ")) != "") {
+  variable_list <- c(variable_list, val)
+}
+# variable_list <- c("GASP", "GRPIP=10:20", "JWDP")
+geography_level <- readline(prompt="enter geography level (region,state,division): ")
+geography_level <- ifelse(geography_level == "", "all", geography_level)
+
 return_data <- get_data(
-  year=2022,
-  # variables = c("AGEP=10,11", "PWGTP", "GASP", "SEX", "AGEP=13"),
-  variables=c("GASP", "GRPIP=10:20", "JWDP"),
-  geography_level = "state:10"
+  year=year,
+  variables=variable_list,
+  geography_level = geography_level
 )
 print(return_data$URL)
 str(return_data$parsed)
+
