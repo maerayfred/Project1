@@ -4,6 +4,9 @@ library(httr)
 library(jsonlite)
 library(glue)
 
+
+source("test.R")
+
 # remove empty string from list
 build_url <- function(year="2022", get_vals=c("AGEP", "PWGTP", "SEX"), get_vals_subset=c(), for_val="state:10") {
   BASE_URL <- glue("https://api.census.gov/data/{year}/acs/acs1/pums")
@@ -37,6 +40,7 @@ example_parsed_tibble <- as_tibble(example_parsed_data[-1,])
 colnames(example_parsed_tibble) <- example_parsed_data[1,]
 
 tib<-as_tibble(example_parsed_tibble)
+print(tib)
 
 class(tib$AGEP)
 
@@ -99,13 +103,40 @@ print(example_parsed_tibble_converted)
 #Creating the Function
 class(example_parsed_tibble_converted)<-c("census",class(example_parsed_tibble_converted))
 
+print(dim(example_parsed_tibble_converted)[1])
 
-var2<-example_parsed_tibble_converted$AGEP
 
+
+var2<-example_parsed_tibble_converted|>
+   mutate(PWGTP=as.numeric(PWGTP))|>
+   select("AGEP")
+var2<-example_parsed_tibble_converted
+
+
+##Start here
+example_parsed_tibble_converted|>
+  group_by(SEX)|>
+ summarize(count =n())
 
 summary_census<-function(x){
+  if(is.numeric(x)){
+    for(i in 1:7819){
+    return(Mean=sum(x))
+    }
+  }
+  else{
+    x|>
+      group_by(x)|>
+    summarize(count=n())
+  }
+}
+summary_census(var2)
+
+
+print(mean)
+summary_census<-function(x){
   if ( is.numeric(x) ){
-    return(mean(x)) }
+    return(mean=mean(x)) }
   
   else {
     return(FALSE)

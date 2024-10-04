@@ -4,17 +4,15 @@ library(httr)
 library(jsonlite)
 library(glue)
 
-# remove empty string from list
-# TODO cannot handle get_vals being empty
-build_url <- function(year="2022", get_vals=c("AGEP", "PWGTP", "SEX"), get_vals_subset=c(), for_val="state:10") {
+build_url <- function(year="2022", get_vals=c("AGEP", "PWGTP", "SEX"), get_vals_subset=NULL, for_val="state:10") {
+  # Builds the URL, assumes all values are valid and/or validation is done outside of this function
+  # Some defaults are provided, just to ensure a large API call URL isn't constructed on accident
   BASE_URL <- glue("https://api.census.gov/data/{year}/acs/acs1/pums")
-  get_vals_csv <- paste(get_vals, collapse=",")
-  get_str <- glue("get={get_vals_csv}")
-  for_str <- glue("for={for_val}")
+  get_vals_str <- ifelse((vals <- paste(get_vals, collapse=",")) != "", glue("get={vals}"), "")
   get_vals_subset_str <- paste(get_vals_subset, collapse="&")
-  suffix_list <- c(get_str, get_vals_subset_str, for_str)
-  suffix_list <- suffix_list[suffix_list != "for=all" & suffix_list != ""]
-  suffix <- paste(suffix_list, collapse="&")
+  for_str <- ifelse(for_val != "", glue("for={for_val}"), "")
+  suffix_list <- c(get_vals_str, get_vals_subset_str, for_str)
+  suffix <- paste(suffix_list[suffix_list != ""], collapse="&")
   return(glue("{BASE_URL}?{suffix}"))
 }
 
@@ -23,24 +21,24 @@ build_url <- function(year="2022", get_vals=c("AGEP", "PWGTP", "SEX"), get_vals_
 # TODO ranges by colon or setting predicates equals, can be a non-supported value and will return nothing
 example_build_url <- build_url(
   year="2022",
-  get_vals=c("AGEP", "SEX", "PWGTP"),
-  get_vals_subset = c("HHL=0,1", "HHL=3,5", "JWAP=1:20", "HISPEED=0:10"),
+  get_vals=c("SEX", "PWGTP"),
+  get_vals_subset = c("AGEP=00"),
+  # get_vals_subset = c("HHL=0,1", "HHL=3,5", "JWAP=1:20", "HISPEED=0:10"),
   for_val = "state:10"
 )
 example_build_url
 
-get_variable_list <- function(year="2022") {
+get_variable_list <- function(year="2022", subset=NULL) {
+  # Get the full variable list for the given year
   URL_VARIABLES <- glue("https://api.census.gov/data/{year}/acs/acs1/pums/variables.json")
   var_info <- httr::GET(URL_VARIABLES)
   var_info_parsed <- fromJSON(rawToChar(var_info$content))
   var_info_tibble <- as_tibble(var_info_parsed)$variables
 
-  return(var_info_tibble)
-}
+  if (is.null(subset)) {
+    return(var_info_tibble)
+  }
 
-example_get_variable_list <- get_variable_list()
-
-filter_variable_list <- function(subset, var_info_tibble) {
   var_data <- list()
   for (var in subset) {
     var_data[var] <- var_info_tibble[var]
@@ -49,11 +47,10 @@ filter_variable_list <- function(subset, var_info_tibble) {
   return(var_data)
 }
 
+example_get_variable_list <- get_variable_list()
+
 example_all_var_list <- c("AGEP", "PWGTP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP", "SEX", "FER", "HHL", "HISPEED", "JWTRNS", "SCH", "SCHL", "REGION", "DIVISION", "ST")
-example_filtered_var_list <- filter_variable_list(
-  example_all_var_list,
-  example_get_variable_list
-)
+example_filtered_var_list <- get_variable_list(subset=example_all_var_list)
 
 is_numeric_variable <- function(var, var_info_tibble) {
     if (!is.null(var_info_tibble[[var]]$values$range) | var %in% c("JWAP", "JWDP")) {
@@ -177,7 +174,7 @@ is_valid_variable_input(
   with_delim=TRUE
 )
 
-get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography_level="all") {
+get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography_level="state:10") {
   # check if PWGTP is provided in the variable list. May be PWGTP=30 or PWGTP=30,50
   if (!any(grepl("^PWGTP$", variables))) {
     variables <- c(variables, "PWGTP")
@@ -197,12 +194,11 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
 
   geography_options <- c("state:", "region:", "division:")
 
-  if (geography_level != "all" & !is_valid_variable_input(geography_level, geography_options, sep=":", with_delim=TRUE)) {
+  if (geography_level != "" & !is_valid_variable_input(geography_level, geography_options, sep=":", with_delim=TRUE)) {
     stop(glue("Invalid geography level {geography_level}, should be 'all' or one of [{glue_collapse(geography_options, sep=', ')}]"))
   }
 
-  var_info_tibble <- get_variable_list(year)
-  filtered_var_info <- filter_variable_list(variable_options, var_info_tibble)
+  filtered_var_info <- get_variable_list(year, variable_options)
 
   # TODO check variables values for valid
   # TODO check geography level values valid
@@ -278,18 +274,20 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
   parsed_tibble <- parsed_tibble |>
     mutate(across(all_of(numeric_item_list[!numeric_item_list %in% c("JWDP", "JWAP")]), as.integer))
 
-  return(list(parsed=parsed_tibble, var_info=filtered_var_info, var_info_tibble=var_info_tibble, URL=URL))
+  return(list(parsed=parsed_tibble, var_info=filtered_var_info, URL=URL))
 }
 
 year <- readline(prompt="enter year: ")
 year <- ifelse(year == "", "2022", year)
 variable_list <- c()
+all_valid_variables <- c("AGEP", "PWGTP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP", "SEX", "FER", "HHL", "HISPEED", "JWTRNS", "SCH", "SCHL")
+print(glue("Valid variables: {glue_collapse(all_valid_variables, sep=', ')}"))
 while ( (val <- readline(prompt="enter variable: ")) != "") {
   variable_list <- c(variable_list, val)
 }
 # variable_list <- c("GASP", "GRPIP=10:20", "JWDP")
-geography_level <- readline(prompt="enter geography level (region,state,division): ")
-geography_level <- ifelse(geography_level == "", "all", geography_level)
+geography_level <- readline(prompt="enter geography level (region,state,division,All): ")
+geography_level <- ifelse(geography_level == "", "state:10", ifelse(geography_level == "All", "", geography_level))
 
 return_data <- get_data(
   year=year,
@@ -298,4 +296,3 @@ return_data <- get_data(
 )
 print(return_data$URL)
 str(return_data$parsed)
-
