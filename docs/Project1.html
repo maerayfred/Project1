@@ -135,29 +135,62 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="data-processing" class="level2">
 <h2 class="anchored" data-anchor-id="data-processing">Data Processing</h2>
+<section id="creating-calling-all-the-packages-we-need-but-coding-so-that-they-are-not-visable-on-the-quarto-document." class="level3">
+<h3 class="anchored" data-anchor-id="creating-calling-all-the-packages-we-need-but-coding-so-that-they-are-not-visable-on-the-quarto-document.">Creating calling all the packages we need but coding so that they are not visable on the quarto document.</h3>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calling libraries</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidycensus)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(httr)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(jsonlite)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(jsonlite)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(glue)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"test.R"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="in-this-step-we-are-creating-the-string-for-the-url.-we-know-that-there-is-the-base-url-and-then-we-are-allowing-for-the-variables-that-we-can-pull-in-the-get-part-of-the-url.-we-also-have-a-default-geography-for-state10-delaware-to-ensure-a-large-api-call-isnt-constructed-on-accident." class="level3">
+<h3 class="anchored" data-anchor-id="in-this-step-we-are-creating-the-string-for-the-url.-we-know-that-there-is-the-base-url-and-then-we-are-allowing-for-the-variables-that-we-can-pull-in-the-get-part-of-the-url.-we-also-have-a-default-geography-for-state10-delaware-to-ensure-a-large-api-call-isnt-constructed-on-accident.">In this step we are creating the string for the URL. We know that there is the base URL and then we are allowing for the variables that we can pull in the get part of the URL. We also have a default geography for state:10, Delaware, to ensure a large API call isn’t constructed on accident.</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>build_url <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">year=</span><span class="st">"2022"</span>, <span class="at">get_vals=</span><span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"PWGTP"</span>, <span class="st">"SEX"</span>), <span class="at">get_vals_subset=</span><span class="cn">NULL</span>, <span class="at">for_val=</span><span class="st">"state:10"</span>) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Builds the URL, assumes all values are valid and/or validation is done outside of this function</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Some defaults are provided, just to ensure a large API call URL isn't constructed on accident</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  BASE_URL <span class="ot">&lt;-</span> <span class="fu">glue</span>(<span class="st">"https://api.census.gov/data/{year}/acs/acs1/pums"</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  get_vals_str <span class="ot">&lt;-</span> <span class="fu">ifelse</span>((vals <span class="ot">&lt;-</span> <span class="fu">paste</span>(get_vals, <span class="at">collapse=</span><span class="st">","</span>)) <span class="sc">!=</span> <span class="st">""</span>, <span class="fu">glue</span>(<span class="st">"get={vals}"</span>), <span class="st">""</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  get_vals_subset_str <span class="ot">&lt;-</span> <span class="fu">paste</span>(get_vals_subset, <span class="at">collapse=</span><span class="st">"&amp;"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  for_str <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(for_val <span class="sc">!=</span> <span class="st">""</span>, <span class="fu">glue</span>(<span class="st">"for={for_val}"</span>), <span class="st">""</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  suffix_list <span class="ot">&lt;-</span> <span class="fu">c</span>(get_vals_str, get_vals_subset_str, for_str)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  suffix <span class="ot">&lt;-</span> <span class="fu">paste</span>(suffix_list[suffix_list <span class="sc">!=</span> <span class="st">""</span>], <span class="at">collapse=</span><span class="st">"&amp;"</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">glue</span>(<span class="st">"{BASE_URL}?{suffix}"</span>))</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">#Here we are creating an example fo the user to play with different inputs(years, variables, and geography) and see what URL is returned.  </span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>example_build_url <span class="ot">&lt;-</span> <span class="fu">build_url</span>(</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">year=</span><span class="st">"2022"</span>,</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">get_vals=</span><span class="fu">c</span>(<span class="st">"SEX"</span>, <span class="st">"PWGTP"</span>),</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">get_vals_subset =</span> <span class="fu">c</span>(<span class="st">"AGEP=00"</span>),</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  <span class="co"># get_vals_subset = c("HHL=0,1", "HHL=3,5", "JWAP=1:20", "HISPEED=0:10"),</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">for_val =</span> <span class="st">"state:10"</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>example_build_url</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>https://api.census.gov/data/2022/acs/acs1/pums?get=SEX,PWGTP&amp;AGEP=00&amp;for=state:10</code></pre>
+</div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Utilizing Get Function to get information from API</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>URL <span class="ot">&lt;-</span> <span class="st">"https://api.census.gov/data/2004/acs/acs1/pums"</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>id_info <span class="ot">&lt;-</span> httr<span class="sc">::</span><span class="fu">GET</span>(URL)</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(id_info, <span class="at">max.level =</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Utilizing Get Function to get information from API</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>URL <span class="ot">&lt;-</span> <span class="st">"https://api.census.gov/data/2005/acs/acs1/pums?get=SEX,PWGTP,MAR&amp;for=state:10&amp;SCHL=16"</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>id_info <span class="ot">&lt;-</span> httr<span class="sc">::</span><span class="fu">GET</span>(URL)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(id_info, <span class="at">max.level =</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>List of 10
- $ url        : chr "https://api.census.gov/data/2004/acs/acs1/pums"
+ $ url        : chr "https://api.census.gov/data/2005/acs/acs1/pums?get=SEX,PWGTP,MAR&amp;for=state:10&amp;SCHL=16"
  $ status_code: int 200
- $ headers    :List of 12
+ $ headers    :List of 11
   ..- attr(*, "class")= chr [1:2] "insensitive" "list"
  $ all_headers:List of 1
  $ cookies    :'data.frame':    1 obs. of  7 variables:
- $ content    : raw [1:3603] 7b 0a 20 20 ...
- $ date       : POSIXct[1:1], format: "2024-09-22 19:50:09"
- $ times      : Named num [1:6] 0 0.00368 0.02106 0.06661 0.08543 ...
+ $ content    : raw [1:2856] 5b 5b 22 53 ...
+ $ date       : POSIXct[1:1], format: "2024-10-04 13:45:58"
+ $ times      : Named num [1:6] 0 0.000029 0 0.000141 0.201137 ...
   ..- attr(*, "names")= chr [1:6] "redirect" "namelookup" "connect" "pretransfer" ...
  $ request    :List of 7
   ..- attr(*, "class")= chr "request"
@@ -166,25 +199,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Creating a tibble to view API information</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>parsed <span class="ot">&lt;-</span> <span class="fu">fromJSON</span>(<span class="fu">rawToChar</span>(id_info<span class="sc">$</span>content))</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>info2 <span class="ot">&lt;-</span> <span class="fu">as_tibble</span>(parsed<span class="sc">$</span>dataset)</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>info2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 1 × 26
-  c_vintage c_dataset c_geographyLink  c_variablesLink c_tagsLink c_examplesLink
-      &lt;int&gt; &lt;list&gt;    &lt;chr&gt;            &lt;chr&gt;           &lt;chr&gt;      &lt;chr&gt;         
-1      2004 &lt;chr [3]&gt; http://api.cens… http://api.cen… http://ap… http://api.ce…
-# ℹ 20 more variables: c_groupsLink &lt;chr&gt;, c_sorts_url &lt;chr&gt;,
-#   c_documentationLink &lt;chr&gt;, c_isMicrodata &lt;lgl&gt;, c_isCube &lt;lgl&gt;,
-#   c_isAvailable &lt;lgl&gt;, `@type` &lt;chr&gt;, title &lt;chr&gt;, accessLevel &lt;chr&gt;,
-#   bureauCode &lt;list&gt;, description &lt;chr&gt;, distribution &lt;list&gt;,
-#   contactPoint &lt;df[,2]&gt;, identifier &lt;chr&gt;, keyword &lt;list&gt;, license &lt;chr&gt;,
-#   modified &lt;chr&gt;, programCode &lt;list&gt;, references &lt;list&gt;, publisher &lt;df[,3]&gt;</code></pre>
-</div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Creating a tibble to view API information</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>parsed <span class="ot">&lt;-</span> <span class="fu">fromJSON</span>(<span class="fu">rawToChar</span>(id_info<span class="sc">$</span>content))</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>info2 <span class="ot">&lt;-</span> <span class="fu">as_tibble</span>(parsed[<span class="sc">-</span><span class="dv">1</span>,])</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(info2)<span class="ot">&lt;-</span>parsed[<span class="dv">1</span>,]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

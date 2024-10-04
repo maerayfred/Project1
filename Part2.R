@@ -7,6 +7,42 @@ library(glue)
 
 source("test.R")
 
+
+source("test.R")
+
+parsed<-return_data$parsed
+##Looped Columns
+
+summary_census<-function(x) {
+  new_data_cat <- x[names(x) %in% c("SEX", "HISPEED", "PWGTP")]
+  new_data_num <- x[names(x) %in% c("GASP", "AGEP", "PWGTP")]
+  
+  for (col in names(new_data_cat)) {
+    if (col == "PWGTP") {
+      next
+    }
+    print(
+      new_data_cat |>
+        group_by(!!sym(col)) |>
+        summarize(count=sum(PWGTP))
+    )
+  }
+  for (col in names(new_data_num)) {
+    if (col == "PWGTP") {
+      next
+    }
+    print(col)
+    print(
+      new_data_num |>
+        mutate(new_mult = !!sym(col) * PWGTP) |>
+        summarize(mean=sum(new_mult) / sum(PWGTP))
+    )
+  }
+}
+
+summary_census(parsed)
+
+
 # remove empty string from list
 build_url <- function(year="2022", get_vals=c("AGEP", "PWGTP", "SEX"), get_vals_subset=c(), for_val="state:10") {
   BASE_URL <- glue("https://api.census.gov/data/{year}/acs/acs1/pums")
@@ -111,6 +147,43 @@ var2<-example_parsed_tibble_converted|>
    mutate(PWGTP=as.numeric(PWGTP))|>
    select("AGEP")
 var2<-example_parsed_tibble_converted
+
+source("test.R")
+
+parsed<-return_data$parsed
+##Looped Columns
+
+summary_census<-function(x) {
+  new_data_cat <- x[names(x) %in% c("SEX", "HISPEED", "PWGTP")]
+  new_data_num <- x[names(x) %in% c("GASP", "AGEP", "PWGTP")]
+  
+  for (col in names(new_data_cat)) {
+    if (col == "PWGTP") {
+      next
+    }
+    print(
+      new_data_cat |>
+        group_by(!!sym(col)) |>
+        summarize(count=sum(PWGTP))
+    )
+  }
+  for (col in names(new_data_num)) {
+    if (col == "PWGTP") {
+      next
+    }
+    print(col)
+    print(
+      new_data_num |>
+        mutate(new_mult = !!sym(col) * PWGTP) |>
+        summarize(mean=sum(new_mult) / sum(PWGTP))
+    )
+  }
+}
+
+summary_census(parsed)
+
+
+
 
 
 ##Start here
