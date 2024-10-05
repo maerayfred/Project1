@@ -72,9 +72,10 @@ get_variable_list <- function(year="2022", subset=NULL) {
 
 ```{r}
 example_get_variable_list <- get_variable_list()
+# Creating a vector with all the variables that the project requires as options
 example_all_var_list <- c("AGEP", "PWGTP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP", "SEX", "FER", "HHL", "HISPEED", "JWTRNS", "SCH", "SCHL", "REGION", "DIVISION", "ST")
 example_filtered_var_list <- get_variable_list(subset=example_all_var_list)
-
+# Creating a function that looks at the parsed data to see if it has a range or is a time variables, if so then labeling as a numeric variable. If the variable doesn't meet those conditions then it's labeled as character. 
 is_numeric_variable <- function(var, var_info_tibble) {
     if (!is.null(var_info_tibble[[var]]$values$range) | var %in% c("JWAP", "JWDP")) {
       return (TRUE)
@@ -87,7 +88,7 @@ for (var in example_all_var_list) {
 }
 
 is_numeric_variable("test", example_get_variable_list)
-
+# Creating a function to store the values of the range 
 get_valid_variable_values <- function(var, var_info_tibble) {
     var_range <- var_info_tibble[[var]]$values$range
     var_item <- var_info_tibble[[var]]$values$item
@@ -106,7 +107,7 @@ get_valid_variable_values <- function(var, var_info_tibble) {
 
     return (ret)
 }
-
+# Testing variables one numeric one character and one one non valid variable. 
 print(get_valid_variable_values("AGEP", example_get_variable_list))
 print(get_valid_variable_values("REGION", example_get_variable_list))
 print(get_valid_variable_values("test", example_get_variable_list))
@@ -116,26 +117,6 @@ print(get_valid_variable_values("test", example_get_variable_list))
 
 
 
-
-
-
-
-```{r}
-## Utilizing Get Function to get information from API
-URL <- "https://api.census.gov/data/2005/acs/acs1/pums?get=SEX,PWGTP,MAR&for=state:10&SCHL=16"
-id_info <- httr::GET(URL)
-str(id_info, max.level = 1)
-
-```
-
-```{r}
-## Creating a tibble to view API information
-parsed <- fromJSON(rawToChar(id_info$content))
-
-info2 <- as_tibble(parsed[-1,])
-colnames(info2)<-parsed[1,]
-
-```
 
 
 
