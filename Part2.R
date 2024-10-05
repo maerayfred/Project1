@@ -4,11 +4,9 @@ library(httr)
 library(jsonlite)
 library(glue)
 
-
 source("test.R")
 
 
-source("test.R")
 
 parsed<-return_data$parsed
 ##Looped Columns
