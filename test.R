@@ -174,6 +174,52 @@ is_valid_variable_input(
   with_delim=TRUE
 )
 
+remove_categorical_row_items_in_numeric <- function(tibble, variable_info) {
+  numeric_columns <- tibble |> select(where(is.numeric))
+
+  for (col in names(numeric_columns)) {
+    # Get the min and max range for the current column from variable_info
+    min_val <- as.integer(variable_info[[col]]$values$range$min)
+    max_val <- as.integer(variable_info[[col]]$values$range$max)
+
+    # Filter the tibble rows based on the min and max values for this column
+    tibble <- tibble |>
+      filter(!!sym(col) >= min_val & !!sym(col) <= max_val)
+
+    return (tibble)
+  }
+}
+# remove_categorical_row_items_in_numeric(return_data$parsed, return_data$var_info)
+
+convert_categorical_to_factor <- function(tibble, variable_info) {
+  character_columns <- tibble |> select(where(is.character))
+  for (col in names(character_columns)) {
+    if (col %in% c("JWAP", "JWDP")) {
+      next
+    }
+    col_var <- col
+    col_var <- ifelse(col == "state", "ST", col_var)
+    col_var <- ifelse(col == "region", "REGION", col_var)
+    col_var <- ifelse(col == "division", "DIVISION", col_var)
+
+    # Get the item values for the current column from variable_info
+    item_values <- variable_info[[col_var]]$values$item
+    # sort the items based on names in reverse order to use labels later
+    item_values <- item_values[order(names(item_values))]
+    # some have 01, 02, etc. but are placed in the lists as 1, 2, etc.
+    names(item_values) <- as.character(as.integer(names(item_values)))
+    # Convert the column to a factor based on the item values
+    tibble <- tibble |>
+      mutate(!!sym(col) := factor(!!sym(col), levels=names(item_values), labels=item_values))
+  }
+  return (tibble)
+}
+# factor_tibble <- convert_categorical_to_factor(return_data$parsed, return_data$var_info)
+
+factor_tibble <- return_data$parsed |>
+  remove_categorical_row_items_in_numeric(return_data$var_info) |>
+  convert_categorical_to_factor(return_data$var_info)
+
 get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography_level="state:10") {
   # check if PWGTP is provided in the variable list. May be PWGTP=30 or PWGTP=30,50
   if (!any(grepl("^PWGTP$", variables))) {
@@ -198,11 +244,7 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
     stop(glue("Invalid geography level {geography_level}, should be 'all' or one of [{glue_collapse(geography_options, sep=', ')}]"))
   }
 
-  filtered_var_info <- get_variable_list(year, variable_options)
-
-  # TODO check variables values for valid
-  # TODO check geography level values valid
-  # TODO send to build_url as 2 lists - one for get values and one for values that will have direct filtering
+  filtered_var_info <- get_variable_list(year, c(variable_options, "ST", "REGION", "DIVISION"))
 
   # PWGTP always included
   # AGEP as default, at least 1 numeric variable needs to be returned aside from PWGTP
@@ -261,7 +303,6 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
   parsed_tibble <- as_tibble(parsed[-1,])
   colnames(parsed_tibble) <- parsed[1,]
 
-  # TODO JWAP and JWDP where a range was provided like JWAP=1:20
   if ("JWAP" %in% names(parsed_tibble)) {
     parsed_tibble$JWAP <- fix_time_interval_categories(filtered_var_info$JWAP$values$item, parsed_tibble$JWAP)
   }
@@ -274,19 +315,30 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
   parsed_tibble <- parsed_tibble |>
     mutate(across(all_of(numeric_item_list[!numeric_item_list %in% c("JWDP", "JWAP")]), as.integer))
 
+  parsed_tibble <- parsed_tibble |>
+    remove_categorical_row_items_in_numeric(filtered_var_info) |>
+    convert_categorical_to_factor(filtered_var_info)
+
+  # TODO time is not split into a numeric value yet
+
   return(list(parsed=parsed_tibble, var_info=filtered_var_info, URL=URL))
 }
 
-year <- readline(prompt="enter year: ")
+# TODO looping function for year
+
+year <- ""
+# year <- readline(prompt="enter year: ")
 year <- ifelse(year == "", "2022", year)
-variable_list <- c()
+variable_list <- NULL
 all_valid_variables <- c("AGEP", "PWGTP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP", "SEX", "FER", "HHL", "HISPEED", "JWTRNS", "SCH", "SCHL")
+variable_list <- all_valid_variables
 print(glue("Valid variables: {glue_collapse(all_valid_variables, sep=', ')}"))
-while ( (val <- readline(prompt="enter variable: ")) != "") {
-  variable_list <- c(variable_list, val)
-}
+# while ( (val <- readline(prompt="enter variable: ")) != "") {
+#   variable_list <- c(variable_list, val)
+# }
 # variable_list <- c("GASP", "GRPIP=10:20", "JWDP")
-geography_level <- readline(prompt="enter geography level (region,state,division,All): ")
+geography_level <- ""
+# geography_level <- readline(prompt="enter geography level (region,state,division,All): ")
 geography_level <- ifelse(geography_level == "", "state:10", ifelse(geography_level == "All", "", geography_level))
 
 return_data <- get_data(
