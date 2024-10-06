@@ -358,3 +358,4 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
 ```
 
 
+

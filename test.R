@@ -19,6 +19,7 @@ build_url <- function(year="2022", get_vals=c("AGEP", "PWGTP", "SEX"), get_vals_
 # TODO PWGTP cannot be given as a predicate, is a weight
 # TODO ranges by colon (not all ranges contain all values for these)
 # TODO ranges by colon or setting predicates equals, can be a non-supported value and will return nothing
+
 example_build_url <- build_url(
   year="2022",
   get_vals=c("SEX", "PWGTP"),
@@ -216,9 +217,7 @@ convert_categorical_to_factor <- function(tibble, variable_info) {
 }
 # factor_tibble <- convert_categorical_to_factor(return_data$parsed, return_data$var_info)
 
-factor_tibble <- return_data$parsed |>
-  remove_categorical_row_items_in_numeric(return_data$var_info) |>
-  convert_categorical_to_factor(return_data$var_info)
+
 
 get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography_level="state:10") {
   # check if PWGTP is provided in the variable list. May be PWGTP=30 or PWGTP=30,50
@@ -348,3 +347,5 @@ return_data <- get_data(
 )
 print(return_data$URL)
 str(return_data$parsed)
+
+print(return_data)
