@@ -1,5 +1,9 @@
+library(tidyverse)
+library(lubridate)
 
 fix_time_interval_categories <- function(item, value_list) {
+  # takes time intervals of the format "1:00 a.m. to 1:04 a.m."
+  # converts to midpoint "1:02:00"
   sorted_item <- item[sort(names(item))]
   item_values <- pivot_longer(as.data.frame(sorted_item), cols=everything(), names_to=NULL, values_to="time_intervals")
   item_df <- pivot_longer(as.data.frame(item_values), cols=everything(), names_to=NULL, values_to="time_intervals")
@@ -23,7 +27,15 @@ fix_time_interval_categories <- function(item, value_list) {
   return(value_list=value_map)
 }
 
+convert_columns_to_numeric <- function(tibble, numeric_item_list, exclude_list=NULL) {
+  tibble <- tibble |>
+    mutate(across(all_of(numeric_item_list[!numeric_item_list %in% exclude_list]), as.integer))
+
+  return (tibble)
+}
+
 remove_categorical_row_items_in_numeric <- function(tibble, variable_info) {
+  # takes a tibble and removes rows where the numeric column is not in the range given for the variable
   numeric_columns <- tibble |> select(where(is.numeric))
 
   for (col in names(numeric_columns)) {
@@ -40,9 +52,11 @@ remove_categorical_row_items_in_numeric <- function(tibble, variable_info) {
 }
 
 convert_categorical_to_factor <- function(tibble, variable_info) {
+  # takes the character columns in the tibble and converts them to the factors in the variable list given
+  # does some specific treatment of JWAP, JWDP, state, region, division - particular to census data
   character_columns <- tibble |> select(where(is.character))
   for (col in names(character_columns)) {
-    if (col %in% c("JWAP", "JWDP")) {
+    if (col %in% c("JWAP", "JWDP") | (!col %in% names(variable_info) & !col %in% c("state", "region", "division"))) {
       next
     }
     col_var <- col
