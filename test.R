@@ -34,12 +34,10 @@ get_variable_list <- function(year="2022", subset=NULL) {
   URL_VARIABLES <- glue("https://api.census.gov/data/{year}/acs/acs1/pums/variables.json")
   var_info <- httr::GET(URL_VARIABLES)
   var_info_parsed <- fromJSON(rawToChar(var_info$content))
-  var_info_tibble <- as_tibble(var_info_parsed)$variables
-  
+  var_info_tibble <- as_tibble(var_info_parsed)$variables  
   if (is.null(subset)) {
     return(var_info_tibble)
   }
-  
   var_data <- list()
   for (var in subset) {
     var_data[var] <- var_info_tibble[var]
@@ -177,16 +175,16 @@ is_valid_variable_input(
 
 remove_categorical_row_items_in_numeric <- function(tibble, variable_info) {
   numeric_columns <- tibble |> select(where(is.numeric))
-  
+
   for (col in names(numeric_columns)) {
     # Get the min and max range for the current column from variable_info
     min_val <- as.integer(variable_info[[col]]$values$range$min)
     max_val <- as.integer(variable_info[[col]]$values$range$max)
-    
+
     # Filter the tibble rows based on the min and max values for this column
     tibble <- tibble |>
       filter(!!sym(col) >= min_val & !!sym(col) <= max_val)
-    
+
     return (tibble)
   }
 }
@@ -215,9 +213,6 @@ convert_categorical_to_factor <- function(tibble, variable_info) {
   }
   return (tibble)
 }
-# factor_tibble <- convert_categorical_to_factor(return_data$parsed, return_data$var_info)
-
-
 
 get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography_level="state:10") {
   # check if PWGTP is provided in the variable list. May be PWGTP=30 or PWGTP=30,50
@@ -238,13 +233,13 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
   }
   
   geography_options <- c("state:", "region:", "division:")
-  
+
   if (geography_level != "" & !is_valid_variable_input(geography_level, geography_options, sep=":", with_delim=TRUE)) {
     stop(glue("Invalid geography level {geography_level}, should be 'all' or one of [{glue_collapse(geography_options, sep=', ')}]"))
   }
-  
+
   filtered_var_info <- get_variable_list(year, c(variable_options, "ST", "REGION", "DIVISION"))
-  
+
   # PWGTP always included
   # AGEP as default, at least 1 numeric variable needs to be returned aside from PWGTP
   # do for loop that checks if range is in the var_data values (AGEP,PWGTP,etc.) ex) var_data$AGEP$values$range
@@ -301,7 +296,7 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
   
   parsed_tibble <- as_tibble(parsed[-1,])
   colnames(parsed_tibble) <- parsed[1,]
-  
+
   if ("JWAP" %in% names(parsed_tibble)) {
     parsed_tibble$JWAP <- fix_time_interval_categories(filtered_var_info$JWAP$values$item, parsed_tibble$JWAP)
   }
@@ -313,13 +308,13 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
   
   parsed_tibble <- parsed_tibble |>
     mutate(across(all_of(numeric_item_list[!numeric_item_list %in% c("JWDP", "JWAP")]), as.integer))
-  
+
   parsed_tibble <- parsed_tibble |>
     remove_categorical_row_items_in_numeric(filtered_var_info) |>
     convert_categorical_to_factor(filtered_var_info)
-  
+
   # TODO time is not split into a numeric value yet
-  
+
   return(list(parsed=parsed_tibble, var_info=filtered_var_info, URL=URL))
 }
 
@@ -349,3 +344,4 @@ print(return_data$URL)
 str(return_data$parsed)
 
 print(return_data)
+
