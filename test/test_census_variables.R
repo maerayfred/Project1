@@ -96,9 +96,13 @@ test_5 <- function () {
   return (TRUE)
 }
 
-
-# data_1 <- test_1()
-# data_2 <- test_2()
-# data_3 <- test_3()
-# data_4 <- test_4()
-# data_5 <- test_5()
+# test_1
+# str(tail(test_1(), 3), max.level=4, list.len=6)
+# test_2
+# str(test_2(), max.level = 4, list.len = 6)
+# test_3
+# test_3()
+# test_4
+# test_4()
+# test_5
+# test_5()

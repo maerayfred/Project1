@@ -26,5 +26,8 @@ test_2 <- function() {
   return (return_data)
 }
 
-data_1 <- test_1()
-data_2 <- test_2()
+# data_1 <- test_1()
+# data_1$URL
+# str(data_1$parsed)
+# data_2 <- test_2()
+# str(data_2, max.level = 2)

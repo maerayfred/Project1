@@ -9,11 +9,11 @@ editor: source
 ```{r}
 #| output: false
 # Calling libraries
-library(tidyverse)
-library(tidycensus)
-library(httr)
-library(jsonlite)
-library(glue)
+#library(tidyverse)
+#library(tidycensus)
+#library(httr)
+#library(jsonlite)
+#library(glue)
 
 ```
 
@@ -22,6 +22,7 @@ library(glue)
 ```{r}
 source("src/census_query.R")
 census_url
+census_tibble
 source("test/test_census_query.R")
 test_1
 test_1()
@@ -37,25 +38,29 @@ test_4()
 
 ```{r}
 source("src/census_variables.R")
-census_url
-source("test/test_census_query.R")
+get_variable_list
+is_numeric_variable
+get_valid_variable_values
+is_valid_variable_value
+source("test/test_census_variables.R")
 test_1
-test_1()
+str(tail(test_1(), 3), max.level=4, list.len=6)
 test_2
-test_2()
+str(test_2(), max.level = 4, list.len = 6)
 test_3
 test_3()
 test_4
 test_4()
+test_5
+test_5()
 
 ```
 
 ### We're creating a function that matches valid variables with their corresponding numeric ranges and character items. 
 
 ```{r}
-library(glue)
 source("src/input_validation.R")
-census_url
+is_valid_variable_input
 source("test/test_input_validation.R")
 test_1
 test_1()
@@ -70,12 +75,48 @@ test_5()
 test_6
 test_6()
 ```
+
+
+### TODO
+```{r}
+source("src/post_processing.R")
+fix_time_interval_categories
+convert_columns_to_numeric
+remove_categorical_row_items_in_numeric
+convert_categorical_to_factor
+source("test/test_post_processing.R")
+test_1
+data_1 <- test_1()
+str(data_1$data)
+str(data_1$var_info, max.level=2, list.len=5)
+test_2
+data_2 <- test_2()
+str(data_2, max.level=2)
+test_3
+data_3 <- test_3()
+# doesnt have 0 in the int list anymore
+head(table(data_3$data$AGEP), 5)
+
+test_4
+data_4 <- test_4()
+str(data_4$data)
+str(data_4$var_info, max.level=3, list.len=5)
+```
+
+
 ### We're accessing all valid API variables and subsetting them according to project instructions. We also create a function to check if the variables in the subset are numeric or character. We're creating a function that matches valid variables with their corresponding numeric ranges and character items. We're processing time variables by separating the intervals, updating morning/evening abbreviations for usability, and calculating the midpoint to derive a single time point.
 
 ```{r}
 source("src/main.R")
-census_url
+get_data
+get_data_years
 source("test/test_main.R")
-
+test_1
+data_1 <- test_1()
+data_1$URL
+str(data_1$parsed)
+test_2
+data_2 <- test_2()
+str(data_2, max.level = 2)
 ```
 

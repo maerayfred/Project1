@@ -60,7 +60,14 @@ test_4 <- function() {
 }
 
 # data_1 <- test_1()
+# str(data_1$data)
+# str(data_1$var_info, max.level=2, list.len=5)
 # data_2 <- test_2()
-# str(data_2)
+# str(data_2, max.level=2)
 # data_3 <- test_3()
+# # doesnt have 0 in the int list anymore
+# head(table(data_3$data$AGEP), 5)
+#
 # data_4 <- test_4()
+# str(data_4$data)
+# str(data_4$var_info, max.level=3, list.len=5)

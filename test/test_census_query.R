@@ -19,7 +19,7 @@ test_3 <- function() {
   URL <- census_url(
     year=2021,
     get_vals = c("HISPEED", "PWGTP"),
-    get_vals_subset = c("AGEP=00", "SEX=2", "GRPIP=30:35"),
+    get_vals_subset = c("AGEP=00", "SEX=2", "GRPIP=30:32"),
     for_val = "region:1"
   )
   return (URL)
