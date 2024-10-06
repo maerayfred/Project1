@@ -134,7 +134,6 @@ fix_time_interval_categories <- function(item, value_list) {
   }
   return(value_list=value_map)
 }
-
 example_data <- httr::GET(build_url(year="2022", get_vals=c("JWAP", "JWDP"), for_val="state:10"))
 example_parsed_data <- fromJSON(rawToChar(example_data$content))
 example_parsed_tibble <- as_tibble(example_parsed_data[-1,])
@@ -190,7 +189,6 @@ remove_categorical_row_items_in_numeric <- function(tibble, variable_info) {
     return (tibble)
   }
 }
-
 # remove_categorical_row_items_in_numeric(return_data$parsed, return_data$var_info)
 
 convert_categorical_to_factor <- function(tibble, variable_info) {
