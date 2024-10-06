@@ -42,6 +42,81 @@ summary_census<-function(x) {
 
 summary_census(parsed)
 
+
+
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(quantreg)
+library(reshape2)
+install.packages("reshape2")
+install.packages("quantreg")
+
+install.packages("hexbin")
+install.packages("evaluate")
+
+summary_plot<-function(x) {
+  new_data_cat <- x[names(x) %in% c("SEX", "HISPEED", "PWGTP")]
+  new_data_num <- x[names(x) %in% c("GASP", "AGEP", "PWGTP")]
+  ggplot(aes(x =new_data_cat, y =new_data_num, weight= PWGTP))+
+    geom_boxplot()
+}
+
+summary_plot(parsed)
+
+
+
+parsed2<- parsed %>% 
+  # select(AGEP, GASP, PWGTP,GRPIP,SEX) %>%
+ #pivot_longer(cols=c("AGEP","GASP","GRPIP"), names_to = "var",values_to = "values") %>%
+
+  ggplot(aes(x =(SEX), y =AGEP, weight= PWGTP))+
+  geom_boxplot()
+print(parsed2)
+
+
+parsed3<- parsed %>% 
+  # select(AGEP, GASP, PWGTP,GRPIP,SEX) %>%
+  pivot_longer(cols=c("SEX","FER","HHL","HISPEED","SCH","SCHL"), names_to = "var",values_to = "values") %>%
+  
+  ggplot(aes(x =var, y =values, weight= PWGTP,fill = var, color = var))+
+  geom_boxplot()
+print(parsed3)
+
+
+
+
+
+
+parsed2<- parsed %>% 
+  select(AGEP, GASP, PWGTP,GRPIP) %>%
+  pivot_longer(cols=c("AGEP","GASP","GRPIP"), names_to = "var",values_to = "values") %>%
+  ggplot(aes(x = var, y = values,fill = var, color = var))+
+  geom_boxplot()
+
+parsed2<- function(x) {
+  new_data_cat <- x[names(x) %in% c("SEX", "HISPEED", "PWGTP")]
+  new_data_num <- x[names(x) %in% c("GASP", "AGEP", "PWGTP")]
+  
+  
+  
+}
+  
+
+parsed2<-ggplot(data=parsed,
+       mapping=aes(x=(HISPEED SEX),y=AGEP))+
+  geom_boxplot()
+  
+print(parsed2)
+
+
+
+
+parsed2(parsed)
+print(parsed2)
+  
+  geom_jitter()
+
 parsed|>
   select(AGEP, SEX, PWGTP)
 
