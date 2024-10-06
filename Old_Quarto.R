@@ -1,12 +1,6 @@
-library(tidyverse)
-library(tidycensus)
-library(httr)
-library(jsonlite)
-library(glue)
 
 build_url <- function(year="2022", get_vals=c("AGEP", "PWGTP", "SEX"), get_vals_subset=NULL, for_val="state:10") {
   # Builds the URL, assumes all values are valid and/or validation is done outside of this function
-  # Some defaults are provided, just to ensure a large API call URL isn't constructed on accident
   BASE_URL <- glue("https://api.census.gov/data/{year}/acs/acs1/pums")
   get_vals_str <- ifelse((vals <- paste(get_vals, collapse=",")) != "", glue("get={vals}"), "")
   get_vals_subset_str <- paste(get_vals_subset, collapse="&")
@@ -16,10 +10,7 @@ build_url <- function(year="2022", get_vals=c("AGEP", "PWGTP", "SEX"), get_vals_
   return(glue("{BASE_URL}?{suffix}"))
 }
 
-# TODO PWGTP cannot be given as a predicate, is a weight
-# TODO ranges by colon (not all ranges contain all values for these)
-# TODO ranges by colon or setting predicates equals, can be a non-supported value and will return nothing
-
+#Here, we provide an example for users to test different inputs (years, variables, geography) and view the resulting URL. 
 example_build_url <- build_url(
   year="2022",
   get_vals=c("SEX", "PWGTP"),
@@ -28,16 +19,25 @@ example_build_url <- build_url(
   for_val = "state:10"
 )
 example_build_url
+```
 
+### We're creating a function to access API data, allowing the year to change with a default of 2022, along with a list of valid variables for the PUMS API.
+
+```{r}
 get_variable_list <- function(year="2022", subset=NULL) {
-  # Get the full variable list for the given year
+  # Accessing the URL that houses all the valid variables for the PUMS data. The default year is 2022 but can be changed. 
   URL_VARIABLES <- glue("https://api.census.gov/data/{year}/acs/acs1/pums/variables.json")
+  # The HTTR package will allow R to contact the website and the GET function will pull back the information from the website, but that data will be in JSON format.
   var_info <- httr::GET(URL_VARIABLES)
+  # The fromJSON function will return the data we are accessing into an R object. 
   var_info_parsed <- fromJSON(rawToChar(var_info$content))
-  var_info_tibble <- as_tibble(var_info_parsed)$variables  
+  # Here we are saving that data, which in this case is a list of valid variables as a tibble.
+  var_info_tibble <- as_tibble(var_info_parsed)$variables
+  
   if (is.null(subset)) {
     return(var_info_tibble)
   }
+  
   var_data <- list()
   for (var in subset) {
     var_data[var] <- var_info_tibble[var]
@@ -45,12 +45,16 @@ get_variable_list <- function(year="2022", subset=NULL) {
   
   return(var_data)
 }
+```
 
+### We're accessing all valid API variables and subsetting them according to project instructions. We also create a function to check if the variables in the subset are numeric or character.
+
+```{r}
 example_get_variable_list <- get_variable_list()
-
+# Creating a vector with all the variables that the project requires as options
 example_all_var_list <- c("AGEP", "PWGTP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP", "SEX", "FER", "HHL", "HISPEED", "JWTRNS", "SCH", "SCHL", "REGION", "DIVISION", "ST")
 example_filtered_var_list <- get_variable_list(subset=example_all_var_list)
-
+# Creating a function that looks at the parsed data to see if it has a range or is a time variables, if so then labeling as a numeric variable. If the variable doesn't meet those conditions then it's labeled as character. 
 is_numeric_variable <- function(var, var_info_tibble) {
   if (!is.null(var_info_tibble[[var]]$values$range) | var %in% c("JWAP", "JWDP")) {
     return (TRUE)
@@ -61,8 +65,9 @@ is_numeric_variable <- function(var, var_info_tibble) {
 for (var in example_all_var_list) {
   print(paste(var, ifelse(is_numeric_variable(var, example_filtered_var_list), "numeric", "categorical")), sep=" ")
 }
-is_numeric_variable("test", example_get_variable_list)
 
+is_numeric_variable("test", example_get_variable_list)
+# Creating a function to store the values of the range 
 get_valid_variable_values <- function(var, var_info_tibble) {
   var_range <- var_info_tibble[[var]]$values$range
   var_item <- var_info_tibble[[var]]$values$item
@@ -81,12 +86,17 @@ get_valid_variable_values <- function(var, var_info_tibble) {
   
   return (ret)
 }
-
+# Testing variables one numeric one character and one one non valid variable. 
 print(get_valid_variable_values("AGEP", example_get_variable_list))
 print(get_valid_variable_values("REGION", example_get_variable_list))
 print(get_valid_variable_values("test", example_get_variable_list))
+```
 
 
+### We're creating a function that matches valid variables with their corresponding numeric ranges and character items. 
+
+```{r}
+# Here he are creating the function and determining if it is in the valid variables subset.
 is_valid_variable_value <- function(val, var, var_info_tibble) {
   valid_values <- get_valid_variable_values(var, var_info_tibble)
   
@@ -105,10 +115,16 @@ is_valid_variable_value <- function(val, var, var_info_tibble) {
   return (FALSE)
 }
 
+# We're testing our function and verifying that the input for geography variables (state, region, and division) are valid, as they are not in sequential order. This also confirms that the non geography variables have valid inputs.
 print(is_valid_variable_value("43", "ST", example_get_variable_list))
 print(is_valid_variable_value("3", "REGION", example_get_variable_list))
 print(is_valid_variable_value("0", "AGEP", example_get_variable_list))
 print(is_valid_variable_value("00", "AGEP", example_get_variable_list))
+```
+
+### We're processing time variables by separating the intervals, updating morning/evening abbreviations for usability, and calculating the midpoint to derive a single time point.
+
+```{r}
 
 fix_time_interval_categories <- function(item, value_list) {
   sorted_item <- item[sort(names(item))]
@@ -133,9 +149,28 @@ fix_time_interval_categories <- function(item, value_list) {
   }
   return(value_list=value_map)
 }
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+### We're using the build URL function from earlier which returns the URL to access the PUMS data. Here we are wanting to specifically access the data for the time variables. We're employing the same GET and fromJSON functions to convert the data into a usable R object 
+```{r}
+
 example_data <- httr::GET(build_url(year="2022", get_vals=c("JWAP", "JWDP"), for_val="state:10"))
 example_parsed_data <- fromJSON(rawToChar(example_data$content))
+# Here we are removing the first row to just get the data.
 example_parsed_tibble <- as_tibble(example_parsed_data[-1,])
+# Here we are setting the fist row which are the variables names as the column names. 
 colnames(example_parsed_tibble) <- example_parsed_data[1,]
 
 example_parsed_tibble$JWAP_fixed <- fix_time_interval_categories(example_filtered_var_list$JWAP$values$item, example_parsed_tibble$JWAP)
@@ -148,10 +183,10 @@ is_valid_variable_input <- function(given_list, valid_list, sep="=", with_delim=
     }
     return(strsplit(element, sep)[[1]][1])
   }
+  ```
   
-  # does it match any of the items in the valid list
-  # all the items must match an item in the valid list
-  # ^ ensures it's the start of the string
+  
+  ```{r}
   if (!all(sapply(given_list, function(x) any(grepl(paste0("^", strip_value(x), "$"), valid_list))))) {
     return (FALSE)
   }
@@ -172,22 +207,11 @@ is_valid_variable_input(
   sep=":",
   with_delim=TRUE
 )
+```
+### Need to add nartive here
 
-remove_categorical_row_items_in_numeric <- function(tibble, variable_info) {
-  numeric_columns <- tibble |> select(where(is.numeric))
+```{r}
 
-  for (col in names(numeric_columns)) {
-    # Get the min and max range for the current column from variable_info
-    min_val <- as.integer(variable_info[[col]]$values$range$min)
-    max_val <- as.integer(variable_info[[col]]$values$range$max)
-
-    # Filter the tibble rows based on the min and max values for this column
-    tibble <- tibble |>
-      filter(!!sym(col) >= min_val & !!sym(col) <= max_val)
-
-    return (tibble)
-  }
-}
 # remove_categorical_row_items_in_numeric(return_data$parsed, return_data$var_info)
 
 convert_categorical_to_factor <- function(tibble, variable_info) {
@@ -213,6 +237,11 @@ convert_categorical_to_factor <- function(tibble, variable_info) {
   }
   return (tibble)
 }
+# factor_tibble <- convert_categorical_to_factor(return_data$parsed, return_data$var_info)
+
+factor_tibble <- return_data$parsed |>
+  remove_categorical_row_items_in_numeric(return_data$var_info) |>
+  convert_categorical_to_factor(return_data$var_info)
 
 get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography_level="state:10") {
   # check if PWGTP is provided in the variable list. May be PWGTP=30 or PWGTP=30,50
@@ -233,20 +262,19 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
   }
   
   geography_options <- c("state:", "region:", "division:")
-
+  
   if (geography_level != "" & !is_valid_variable_input(geography_level, geography_options, sep=":", with_delim=TRUE)) {
     stop(glue("Invalid geography level {geography_level}, should be 'all' or one of [{glue_collapse(geography_options, sep=', ')}]"))
   }
-
+  
   filtered_var_info <- get_variable_list(year, c(variable_options, "ST", "REGION", "DIVISION"))
-
-  # PWGTP always included
-  # AGEP as default, at least 1 numeric variable needs to be returned aside from PWGTP
-  # do for loop that checks if range is in the var_data values (AGEP,PWGTP,etc.) ex) var_data$AGEP$values$range
+  ```
   
-  # SEX is default categorical variable
-  # at least one categorical variable needs to be returned
   
+  ### We're creating a for loop to count categorical and numeric variables, ensuring SEX is always included as a categorical variable and PWGPT as a numeric variable.
+  
+  ```{r}
+  # Here we are assigning the counts to zero to start for the numerical and categorical variables.
   numeric_items_count <- 0
   categorical_items_count <- 0
   numeric_item_list <- c()
@@ -266,7 +294,7 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
     }
     print(get_valid_variable_values(var, filtered_var_info))
   }
-  
+  # We have our function default numeric values as AGEP and PWGPT. 
   if (numeric_items_count <= 1) {
     variables <- c(variables, "AGEP")
     numeric_item_list <- c(numeric_item_list, "AGEP")
@@ -296,7 +324,7 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
   
   parsed_tibble <- as_tibble(parsed[-1,])
   colnames(parsed_tibble) <- parsed[1,]
-
+  
   if ("JWAP" %in% names(parsed_tibble)) {
     parsed_tibble$JWAP <- fix_time_interval_categories(filtered_var_info$JWAP$values$item, parsed_tibble$JWAP)
   }
@@ -308,40 +336,16 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
   
   parsed_tibble <- parsed_tibble |>
     mutate(across(all_of(numeric_item_list[!numeric_item_list %in% c("JWDP", "JWAP")]), as.integer))
-
+  
   parsed_tibble <- parsed_tibble |>
     remove_categorical_row_items_in_numeric(filtered_var_info) |>
     convert_categorical_to_factor(filtered_var_info)
-
+  
   # TODO time is not split into a numeric value yet
-
+  
   return(list(parsed=parsed_tibble, var_info=filtered_var_info, URL=URL))
 }
+```
 
-# TODO looping function for year
 
-year <- ""
-# year <- readline(prompt="enter year: ")
-year <- ifelse(year == "", "2022", year)
-variable_list <- NULL
-all_valid_variables <- c("AGEP", "PWGTP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP", "SEX", "FER", "HHL", "HISPEED", "JWTRNS", "SCH", "SCHL")
-variable_list <- all_valid_variables
-print(glue("Valid variables: {glue_collapse(all_valid_variables, sep=', ')}"))
-# while ( (val <- readline(prompt="enter variable: ")) != "") {
-#   variable_list <- c(variable_list, val)
-# }
-# variable_list <- c("GASP", "GRPIP=10:20", "JWDP")
-geography_level <- ""
-# geography_level <- readline(prompt="enter geography level (region,state,division,All): ")
-geography_level <- ifelse(geography_level == "", "state:10", ifelse(geography_level == "All", "", geography_level))
-
-return_data <- get_data(
-  year=year,
-  variables=variable_list,
-  geography_level = geography_level
-)
-print(return_data$URL)
-str(return_data$parsed)
-
-print(return_data)
 
