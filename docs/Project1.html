@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Project11</title>
+<title>Project1</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -116,7 +116,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Project11</h1>
+<h1 class="title">Project1</h1>
 </div>
 
 
@@ -234,6 +234,349 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  9 2       173   0     2     35    1     
 10 2       190   0     2     32    1     
 # ℹ 48 more rows</code></pre>
+</div>
+</div>
+</section>
+<section id="were-creating-a-function-to-access-api-data-allowing-the-year-to-change-with-a-default-of-2022-along-with-a-list-of-valid-variables-for-the-pums-api.-were-accessing-all-valid-api-variables-and-subsetting-them-according-to-project-instructions.-we-also-create-a-function-to-check-if-the-variables-in-the-subset-are-numeric-or-character." class="level3">
+<h3 class="anchored" data-anchor-id="were-creating-a-function-to-access-api-data-allowing-the-year-to-change-with-a-default-of-2022-along-with-a-list-of-valid-variables-for-the-pums-api.-were-accessing-all-valid-api-variables-and-subsetting-them-according-to-project-instructions.-we-also-create-a-function-to-check-if-the-variables-in-the-subset-are-numeric-or-character.">We’re creating a function to access API data, allowing the year to change with a default of 2022, along with a list of valid variables for the PUMS API. We’re accessing all valid API variables and subsetting them according to project instructions. We also create a function to check if the variables in the subset are numeric or character.</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"src/census_variables.R"</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>census_url</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>function (year = "2022", get_vals = c("AGEP", "PWGTP", "SEX"), 
+    get_vals_subset = NULL, for_val = "state:10") 
+{
+    BASE_URL &lt;- glue("https://api.census.gov/data/{year}/acs/acs1/pums")
+    get_vals_str &lt;- ifelse((vals &lt;- paste(get_vals, collapse = ",")) != 
+        "", glue("get={vals}"), "")
+    get_vals_subset_str &lt;- paste(get_vals_subset, collapse = "&amp;")
+    for_str &lt;- ifelse(for_val != "", glue("for={for_val}"), "")
+    suffix_list &lt;- c(get_vals_str, get_vals_subset_str, for_str)
+    suffix &lt;- paste(suffix_list[suffix_list != ""], collapse = "&amp;")
+    return(glue("{BASE_URL}?{suffix}"))
+}
+&lt;bytecode: 0x7fac6601dba0&gt;</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"test/test_census_query.R"</span>)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>test_1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>function () 
+{
+    URL &lt;- census_url()
+    return(URL)
+}</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">test_1</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>https://api.census.gov/data/2022/acs/acs1/pums?get=AGEP,PWGTP,SEX&amp;for=state:10</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>test_2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>function () 
+{
+    URL &lt;- census_url(get_vals = NULL, get_vals_subset = NULL, 
+        for_val = NULL)
+    return(URL)
+}</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">test_2</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>https://api.census.gov/data/2022/acs/acs1/pums?</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>test_3</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>function () 
+{
+    URL &lt;- census_url(year = 2021, get_vals = c("HISPEED", "PWGTP"), 
+        get_vals_subset = c("AGEP=00", "SEX=2", "GRPIP=30:35"), 
+        for_val = "region:1")
+    return(URL)
+}</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">test_3</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>https://api.census.gov/data/2021/acs/acs1/pums?get=HISPEED,PWGTP&amp;AGEP=00&amp;SEX=2&amp;GRPIP=30:35&amp;for=region:1</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>test_4</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>function () 
+{
+    URL &lt;- test_3()
+    return(census_tibble(URL))
+}</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">test_4</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 58 × 6
+   HISPEED PWGTP AGEP  SEX   GRPIP region
+   &lt;chr&gt;   &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; 
+ 1 0       239   0     2     32    1     
+ 2 2       383   0     2     35    1     
+ 3 1       118   0     2     31    1     
+ 4 1       233   0     2     32    1     
+ 5 1       234   0     2     32    1     
+ 6 1       215   0     2     31    1     
+ 7 1       112   0     2     31    1     
+ 8 1       65    0     2     32    1     
+ 9 1       43    0     2     32    1     
+10 1       109   0     2     30    1     
+# ℹ 48 more rows</code></pre>
+</div>
+</div>
+</section>
+<section id="were-creating-a-function-that-matches-valid-variables-with-their-corresponding-numeric-ranges-and-character-items." class="level3">
+<h3 class="anchored" data-anchor-id="were-creating-a-function-that-matches-valid-variables-with-their-corresponding-numeric-ranges-and-character-items.">We’re creating a function that matches valid variables with their corresponding numeric ranges and character items.</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"src/input_validation.R"</span>)</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>census_url</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>function (year = "2022", get_vals = c("AGEP", "PWGTP", "SEX"), 
+    get_vals_subset = NULL, for_val = "state:10") 
+{
+    BASE_URL &lt;- glue("https://api.census.gov/data/{year}/acs/acs1/pums")
+    get_vals_str &lt;- ifelse((vals &lt;- paste(get_vals, collapse = ",")) != 
+        "", glue("get={vals}"), "")
+    get_vals_subset_str &lt;- paste(get_vals_subset, collapse = "&amp;")
+    for_str &lt;- ifelse(for_val != "", glue("for={for_val}"), "")
+    suffix_list &lt;- c(get_vals_str, get_vals_subset_str, for_str)
+    suffix &lt;- paste(suffix_list[suffix_list != ""], collapse = "&amp;")
+    return(glue("{BASE_URL}?{suffix}"))
+}
+&lt;bytecode: 0x7fac6601dba0&gt;</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"test/test_input_validation.R"</span>)</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>test_1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>function () 
+{
+    valid_list &lt;- c("AGEP", "PWGTP", "SEX")
+    valid_given_lists &lt;- list("AGEP", c("AGEP", "PWGTP", "SEX"), 
+        c("AGEP=abc", "PWGTP=123", "SEX="))
+    for (valid_given_list in valid_given_lists) {
+        if (!is_valid_variable_input(valid_given_list, valid_list)) {
+            return(FALSE)
+        }
+    }
+    return(TRUE)
+}</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">test_1</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>test_2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>function () 
+{
+    valid_list &lt;- c("AGEP", "PWGTP", "SEX")
+    valid_given_lists &lt;- list("AGEP", c("AGEP", "PWGTP", "SEX"), 
+        c("AGEP:abc", "PWGTP:123", "SEX:"))
+    for (valid_given_list in valid_given_lists) {
+        if (!is_valid_variable_input(valid_given_list, valid_list, 
+            sep = ":")) {
+            return(FALSE)
+        }
+    }
+    return(TRUE)
+}</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">test_2</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>test_3</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>function () 
+{
+    valid_list &lt;- c("state:", "division:", "region:")
+    valid_given_lists &lt;- list("state:", c("state:", "division:5"), 
+        c("state:", "division:", "region:"), c("state:abc", "division:123", 
+            "region:"))
+    for (valid_given_list in valid_given_lists) {
+        if (!is_valid_variable_input(valid_given_list, valid_list, 
+            sep = ":", with_delim = TRUE)) {
+            return(FALSE)
+        }
+    }
+    return(TRUE)
+}</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">test_3</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>test_4</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>function () 
+{
+    valid_list &lt;- c("AGEP", "PWGTP", "SEX")
+    invalid_given_lists &lt;- list("AGE", "AGEPa", c("AGEP", "PWGTP", 
+        "SAX=1"), c("AGEP", "PWGTP:1"))
+    for (invalid_given_list in invalid_given_lists) {
+        if (is_valid_variable_input(invalid_given_list, valid_list)) {
+            return(FALSE)
+        }
+    }
+    return(TRUE)
+}</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">test_4</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>test_5</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>function () 
+{
+    valid_list &lt;- c("AGEP", "PWGTP", "SEX")
+    invalid_given_lists &lt;- list("AGE", "AGEPa", c("AGEP", "PWGTP", 
+        "SAX:1"), c("AGEP", "PWGTP=1"))
+    for (invalid_given_list in invalid_given_lists) {
+        if (is_valid_variable_input(invalid_given_list, valid_list, 
+            sep = ":")) {
+            return(FALSE)
+        }
+    }
+    return(TRUE)
+}</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="fu">test_5</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>test_6</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>function () 
+{
+    valid_list &lt;- c("state:", "division:", "region:")
+    invalid_given_lists &lt;- list("state", c("state:", "division=5"), 
+        c("state:", "division:", "region"), c("state:abc", "division:123", 
+            "ST:1"))
+    for (invalid_given_list in invalid_given_lists) {
+        if (is_valid_variable_input(invalid_given_list, valid_list, 
+            sep = ":", with_delim = TRUE)) {
+            return(FALSE)
+        }
+    }
+    return(TRUE)
+}</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="fu">test_6</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+</div>
+</section>
+<section id="were-accessing-all-valid-api-variables-and-subsetting-them-according-to-project-instructions.-we-also-create-a-function-to-check-if-the-variables-in-the-subset-are-numeric-or-character.-were-creating-a-function-that-matches-valid-variables-with-their-corresponding-numeric-ranges-and-character-items.-were-processing-time-variables-by-separating-the-intervals-updating-morningevening-abbreviations-for-usability-and-calculating-the-midpoint-to-derive-a-single-time-point." class="level3">
+<h3 class="anchored" data-anchor-id="were-accessing-all-valid-api-variables-and-subsetting-them-according-to-project-instructions.-we-also-create-a-function-to-check-if-the-variables-in-the-subset-are-numeric-or-character.-were-creating-a-function-that-matches-valid-variables-with-their-corresponding-numeric-ranges-and-character-items.-were-processing-time-variables-by-separating-the-intervals-updating-morningevening-abbreviations-for-usability-and-calculating-the-midpoint-to-derive-a-single-time-point.">We’re accessing all valid API variables and subsetting them according to project instructions. We also create a function to check if the variables in the subset are numeric or character. We’re creating a function that matches valid variables with their corresponding numeric ranges and character items. We’re processing time variables by separating the intervals, updating morning/evening abbreviations for usability, and calculating the midpoint to derive a single time point.</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"src/main.R"</span>)</span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>census_url</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>function (year = "2022", get_vals = c("AGEP", "PWGTP", "SEX"), 
+    get_vals_subset = NULL, for_val = "state:10") 
+{
+    BASE_URL &lt;- glue("https://api.census.gov/data/{year}/acs/acs1/pums")
+    get_vals_str &lt;- ifelse((vals &lt;- paste(get_vals, collapse = ",")) != 
+        "", glue("get={vals}"), "")
+    get_vals_subset_str &lt;- paste(get_vals_subset, collapse = "&amp;")
+    for_str &lt;- ifelse(for_val != "", glue("for={for_val}"), "")
+    suffix_list &lt;- c(get_vals_str, get_vals_subset_str, for_str)
+    suffix &lt;- paste(suffix_list[suffix_list != ""], collapse = "&amp;")
+    return(glue("{BASE_URL}?{suffix}"))
+}</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"test/test_main.R"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Valid variables: AGEP, PWGTP, GASP, GRPIP, JWAP, JWDP, JWMNP, SEX, FER, HHL, HISPEED, JWTRNS, SCH, SCHL
+[1] "AGEP NA"
+      min  max 
+"00"  "1" "99" 
+[1] "PWGTP NA"
+ min  max 
+   1 9999 
+[1] "GASP NA"
+          min    max 
+   "3"    "4" "9999" 
+[1] "GRPIP NA"
+              min   max 
+  "0" "101"   "1" "100" 
+[1] "JWAP NA"
+  [1] "258" "260" "261" "274" "048" "058" "076" "091" "094" "122" "142" "146"
+ [13] "163" "165" "171" "184" "189" "192" "198" "210" "218" "220" "221" "222"
+ [25] "224" "227" "228" "251" "256" "259" "262" "270" "271" "276" "284" "006"
+ [37] "008" "009" "011" "017" "020" "031" "039" "053" "065" "075" "085" "090"
+ [49] "101" "107" "121" "124" "137" "156" "164" "173" "197" "202" "234" "235"
+ [61] "246" "249" "257" "273" "277" "002" "004" "015" "034" "035" "042" "044"
+ [73] "050" "052" "055" "069" "071" "077" "079" "082" "089" "092" "093" "097"
+ [85] "117" "118" "129" "132" "138" "144" "148" "150" "152" "166" "181" "183"
+ [97] "205" "219" "230" "233" "239" "244" "254" "265" "272" "013" "014" "019"
+[109] "022" "033" "037" "041" "059" "067" "068" "074" "080" "084" "088" "095"
+[121] "100" "125" "140" "172" "178" "182" "185" "187" "199" "206" "208" "209"
+[133] "243" "268" "269" "279" "001" "005" "007" "023" "025" "029" "036" "043"
+[145] "046" "051" "056" "073" "081" "098" "103" "106" "114" "135" "143" "149"
+[157] "157" "158" "160" "170" "174" "179" "194" "196" "211" "212" "214" "241"
+[169] "264" "266" "016" "018" "021" "028" "054" "060" "064" "070" "078" "087"
+[181] "105" "111" "119" "123" "126" "134" "139" "141" "151" "153" "169" "180"
+[193] "203" "204" "207" "215" "216" "217" "223" "225" "247" "248" "252" "253"
+[205] "255" "263" "267" "278" "280" "281" "282" "0"   "003" "010" "038" "049"
+[217] "057" "061" "062" "072" "083" "104" "108" "116" "128" "133" "136" "147"
+[229] "154" "155" "161" "162" "167" "175" "177" "186" "190" "191" "193" "200"
+[241] "201" "226" "232" "236" "237" "238" "240" "242" "245" "250" "275" "283"
+[253] "285" "012" "024" "026" "027" "030" "032" "040" "045" "047" "063" "066"
+[265] "086" "096" "099" "102" "109" "110" "112" "113" "115" "120" "127" "130"
+[277] "131" "145" "159" "168" "176" "188" "195" "213" "229" "231"
+[1] "JWDP NA"
+  [1] "014" "015" "017" "022" "035" "046" "065" "068" "076" "079" "083" "085"
+ [13] "086" "103" "105" "118" "127" "130" "131" "139" "141" "149" "057" "059"
+ [25] "063" "066" "073" "078" "100" "101" "104" "107" "111" "116" "128" "150"
+ [37] "0"   "010" "011" "019" "028" "044" "045" "047" "049" "053" "055" "056"
+ [49] "084" "090" "092" "110" "112" "120" "132" "133" "134" "009" "023" "031"
+ [61] "038" "040" "050" "060" "062" "064" "067" "069" "082" "095" "096" "097"
+ [73] "119" "121" "135" "003" "033" "036" "041" "061" "081" "093" "098" "102"
+ [85] "109" "115" "126" "143" "145" "001" "006" "012" "013" "016" "025" "026"
+ [97] "030" "077" "087" "088" "094" "106" "108" "122" "123" "124" "144" "002"
+[109] "004" "005" "007" "020" "021" "024" "027" "034" "039" "042" "043" "048"
+[121] "051" "058" "072" "074" "075" "091" "113" "117" "125" "129" "136" "137"
+[133] "140" "008" "018" "029" "032" "037" "052" "054" "070" "071" "080" "089"
+[145] "099" "114" "138" "142" "146" "147" "148"
+[1] "JWMNP NA"
+        min   max 
+  "0"   "1" "200" 
+[1] "SEX NA"
+[1] "1" "2"
+[1] "FER NA"
+[1] "0" "2" "1"
+[1] "HHL NA"
+[1] "0" "2" "3" "1" "4" "5"
+[1] "HISPEED NA"
+[1] "2" "1" "0"
+[1] "JWTRNS NA"
+ [1] "11" "07" "02" "05" "0"  "12" "04" "09" "01" "03" "06" "10" "08"
+[1] "SCH NA"
+[1] "0" "3" "1" "2"
+[1] "SCHL NA"
+ [1] "16" "01" "04" "03" "07" "23" "19" "22" "10" "20" "0"  "02" "21" "08" "24"
+[16] "06" "14" "17" "12" "15" "13" "05" "11" "18" "09"
+Numeric item list, gets converted to int - [AGEP, PWGTP, GASP, GRPIP, JWAP, JWDP, JWMNP]
+List without JWAP and JWDP - [AGEP, PWGTP, GASP, GRPIP, JWMNP]
+https://api.census.gov/data/2022/acs/acs1/pums?get=AGEP,PWGTP,GASP,GRPIP,JWAP,JWDP,JWMNP,SEX,FER,HHL,HISPEED,JWTRNS,SCH,SCHL&amp;for=state:10
+tibble [9,569 × 15] (S3: tbl_df/tbl/data.frame)
+ $ AGEP   : int [1:9569] 84 39 19 77 18 32 50 23 20 18 ...
+ $ PWGTP  : int [1:9569] 76 20 92 19 32 80 132 19 47 201 ...
+ $ GASP   : int [1:9569] 3 3 3 3 3 3 3 3 3 3 ...
+ $ GRPIP  : int [1:9569] 0 0 0 0 0 0 0 0 0 0 ...
+ $ JWAP   : chr [1:9569] "NA" "NA" "NA" "NA" ...
+ $ JWDP   : chr [1:9569] "NA" "NA" "NA" "NA" ...
+ $ JWMNP  : int [1:9569] 0 0 0 0 0 0 0 20 0 0 ...
+ $ SEX    : Factor w/ 2 levels "Male","Female": 2 2 2 2 2 1 1 1 2 2 ...
+ $ FER    : Factor w/ 3 levels "N/A (less than 15 years/greater than 50 years/ male)",..: 1 3 3 1 3 1 1 1 3 3 ...
+ $ HHL    : Factor w/ 6 levels "N/A (GQ/vacant)",..: 1 1 1 1 1 1 1 1 1 1 ...
+ $ HISPEED: Factor w/ 3 levels "N/A (GQ/vacant/no paid access to the internet)",..: 1 1 1 1 1 1 1 1 1 1 ...
+ $ JWTRNS : Factor w/ 13 levels "N/A (not a worker-not in the labor force, including persons under 16 years; unemployed; employed, with a job bu"| __truncated__,..: 1 1 1 1 1 1 1 2 1 1 ...
+ $ SCH    : Factor w/ 4 levels "N/A (less than 3 years old)",..: 2 2 3 2 3 2 2 4 3 3 ...
+ $ SCHL   : Factor w/ 25 levels "N/A (less than 3 years old)",..: 22 17 20 22 17 17 22 22 20 17 ...
+ $ state  : Factor w/ 52 levels "Alabama/AL","Alaska/AK",..: 8 8 8 8 8 8 8 8 8 8 ...</code></pre>
 </div>
 </div>
 

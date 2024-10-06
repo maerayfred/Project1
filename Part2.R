@@ -42,10 +42,14 @@ summary_census<-function(x) {
 
 summary_census(parsed)
 
+parsed|>
+  select(AGEP, SEX, PWGTP)
+
 library(ggplot2)
 
 ggplot(parsed,
-       aes(x=get()))
+       aes(x=get(SEX), y=get(AGEP),weight=(PWGTP))+
+         geom_boxplot())
 
 
 # remove empty string from list
