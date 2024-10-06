@@ -32,13 +32,20 @@ summary_census<-function(x) {
     print(col)
     print(
       new_data_num |>
-        mutate(new_mult = !!sym(col) * PWGTP) |>
-        summarize(mean=sum(new_mult) / sum(PWGTP))
+        mutate(new_mult = !!sym(col) * PWGTP,
+               new_mult2 = (!!sym(col))^2*PWGTP)|>
+        summarize(mean=sum(new_mult) / sum(PWGTP),
+                  sd=sqrt(sum(new_mult2)/(sum(PWGTP)-mean^2)))
     )
   }
 }
 
 summary_census(parsed)
+
+library(ggplot2)
+
+ggplot(parsed,
+       aes(x=get()))
 
 
 # remove empty string from list
