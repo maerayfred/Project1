@@ -247,9 +247,6 @@ summary_census<-function(x) {
 summary_census(parsed)
 
 
-
-
-
 ##Start here
 example_parsed_tibble_converted|>
   group_by(SEX)|>
