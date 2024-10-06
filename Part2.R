@@ -11,14 +11,15 @@ source("test.R")
 parsed<-return_data$parsed
 ##Looped Columns
 
-summary_census<-function(x) {
-  new_data_cat <- x[names(x) %in% c("SEX", "HISPEED", "PWGTP")]
-  new_data_num <- x[names(x) %in% c("GASP", "AGEP", "PWGTP")]
+summary_census<-function(x,categorical=c("SEX","FER","HHL","SCH","SCHL", "HISPEED", "PWGTP","REGION","DIVISION","STATE"),numerical=c("GASP", "GRPIP","AGEP", "PWGTP")) {
+  new_data_cat <- x[names(x) %in% categorical ]
+  new_data_num <- x[names(x) %in% numerical ]
   
   for (col in names(new_data_cat)) {
     if (col == "PWGTP") {
       next
     }
+  
     print(
       new_data_cat |>
         group_by(!!sym(col)) |>
@@ -33,9 +34,9 @@ summary_census<-function(x) {
     print(
       new_data_num |>
         mutate(new_mult = !!sym(col) * PWGTP,
-               new_mult2 = (!!sym(col))^2*PWGTP)|>
+               new_mult2 = !!sym(col))|>
         summarize(mean=sum(new_mult) / sum(PWGTP),
-                  sd=sqrt(sum(new_mult2)/(sum(PWGTP)-mean^2)))
+                  sd=sqrt(sum(PWGTP*(!!sym(col)-mean)^2)/sum(PWGTP)))
     )
   }
 }
@@ -49,39 +50,18 @@ library(dplyr)
 library(ggplot2)
 library(quantreg)
 library(reshape2)
+
 install.packages("reshape2")
 install.packages("quantreg")
 
-install.packages("hexbin")
-install.packages("evaluate")
-
-summary_plot<-function(x) {
-  new_data_cat <- x[names(x) %in% c("SEX", "HISPEED", "PWGTP")]
-  new_data_num <- x[names(x) %in% c("GASP", "AGEP", "PWGTP")]
-  ggplot(aes(x =new_data_cat, y =new_data_num, weight= PWGTP))+
-    geom_boxplot()
-}
-
-summary_plot(parsed)
 
 
-
+# We chose to investigate the populations educational level base on age. We were interested in showing people who are typical school age range. 
 parsed2<- parsed %>% 
-  # select(AGEP, GASP, PWGTP,GRPIP,SEX) %>%
- #pivot_longer(cols=c("AGEP","GASP","GRPIP"), names_to = "var",values_to = "values") %>%
-
-  ggplot(aes(x =(SEX), y =AGEP, weight= PWGTP))+
+   filter(AGEP<=40 & AGEP >=5)%>%
+  ggplot(aes(x =SCH, y =AGEP, weight= PWGTP,fill = SCH, color = SCH))+
   geom_boxplot()
 print(parsed2)
-
-
-parsed3<- parsed %>% 
-  # select(AGEP, GASP, PWGTP,GRPIP,SEX) %>%
-  pivot_longer(cols=c("SEX","FER","HHL","HISPEED","SCH","SCHL"), names_to = "var",values_to = "values") %>%
-  
-  ggplot(aes(x =var, y =values, weight= PWGTP,fill = var, color = var))+
-  geom_boxplot()
-print(parsed3)
 
 
 
