@@ -28,6 +28,24 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
   }
 
   filtered_var_info <- get_variable_list(year, c(variable_options, "ST", "REGION", "DIVISION"))
+  # some years dont have data
+  # remove variables where they don't exist
+  for (var in names(filtered_var_info)) {
+    if (is.null(filtered_var_info[[var]]) | is.null(filtered_var_info[[var]]$values)) {
+      print(paste0("removing ", var, " from year ", year))
+      filtered_var_info <- filtered_var_info[!names(filtered_var_info) %in% var]
+      for (var2 in variables) {
+        if (any(grepl(var, var2))) {
+          print(paste0("removing variable ", var2, " from year ", year))
+          variables <- variables[variables != var2]
+        }
+      }
+    }
+  }
+  # use the most updated variable list for geography level - not in prior years but still can filter
+  # for those years, use prior variables for rest though, in case mapping changed for some reason
+  newest_geography_variables <- get_variable_list(2022, c("ST", "REGION", "DIVISION"))
+  filtered_var_info <- c(filtered_var_info, newest_geography_variables)
 
   # PWGTP always included
   # AGEP as default, at least 1 numeric variable needs to be returned aside from PWGTP
@@ -45,7 +63,7 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
     var_split <- strsplit(var, "=")[[1]]
     var <- var_split[1]
     values <- var_split[2]
-    print(paste(var, values, sep=" "))
+    # print(paste(var, values, sep=" "))
 
     if (is_numeric_variable(var, filtered_var_info)) {
       numeric_item_list <- c(numeric_item_list, var)
@@ -53,20 +71,20 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
     } else {
       categorical_items_count <- categorical_items_count + 1
     }
-    print(get_valid_variable_values(var, filtered_var_info))
+    # print(get_valid_variable_values(var, filtered_var_info))
   }
 
   if (numeric_items_count <= 1) {
     variables <- c(variables, "AGEP")
     numeric_item_list <- c(numeric_item_list, "AGEP")
-    print("AGEP NA")
-    print(get_valid_variable_values("AGEP", filtered_var_info))
+    # print("AGEP NA")
+    # print(get_valid_variable_values("AGEP", filtered_var_info))
   }
 
   if (categorical_items_count == 0) {
     variables <- c(variables, "SEX")
-    print("SEX NA")
-    print(get_valid_variable_values("SEX", filtered_var_info))
+    # print("SEX NA")
+    # print(get_valid_variable_values("SEX", filtered_var_info))
   }
 
   var_with_filter <- c()
@@ -78,13 +96,7 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
   }
 
   URL <- census_url(year=year, get_vals=variables, get_vals_subset=var_with_filter, for_val=geography_level)
-  id_info <- httr::GET(URL)
-
-  ## Creating a tibble to view API information
-  parsed <- fromJSON(rawToChar(id_info$content))
-
-  parsed_tibble <- as_tibble(parsed[-1,])
-  colnames(parsed_tibble) <- parsed[1,]
+  parsed_tibble <- census_tibble(URL)
 
   if ("JWAP" %in% names(parsed_tibble)) {
     parsed_tibble$JWAP <- fix_time_interval_categories(filtered_var_info$JWAP$values$item, parsed_tibble$JWAP)
@@ -92,13 +104,11 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
   if ("JWDP" %in% names(parsed_tibble)) {
     parsed_tibble$JWDP <- fix_time_interval_categories(filtered_var_info$JWDP$values$item, parsed_tibble$JWDP)
   }
-  print(glue("Numeric item list, gets converted to int - [{glue_collapse(numeric_item_list, sep=', ')}]"))
-  print(glue("List without JWAP and JWDP - [{glue_collapse(numeric_item_list[!numeric_item_list %in% c('JWDP', 'JWAP')], sep=', ')}]"))
+  # print(glue("Numeric item list, gets converted to int - [{glue_collapse(numeric_item_list, sep=', ')}]"))
+  # print(glue("List without JWAP and JWDP - [{glue_collapse(numeric_item_list[!numeric_item_list %in% c('JWDP', 'JWAP')], sep=', ')}]"))
 
   parsed_tibble <- parsed_tibble |>
-    mutate(across(all_of(numeric_item_list[!numeric_item_list %in% c("JWDP", "JWAP")]), as.integer))
-
-  parsed_tibble <- parsed_tibble |>
+    convert_columns_to_numeric(numeric_item_list, exclude_list=c("JWDP", "JWAP")) |>
     remove_categorical_row_items_in_numeric(filtered_var_info) |>
     convert_categorical_to_factor(filtered_var_info)
 
@@ -107,4 +117,10 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
   return(list(parsed=parsed_tibble, var_info=filtered_var_info, URL=URL))
 }
 
-# TODO looping function for year
+get_data_years <- function(years="2022", variables=c("AGEP", "PWGTP", "SEX"), geography_level="state:10") {
+  # get multiple years of data, removing 2020 if given - year is not valid for some reason
+  years <- years[years != 2020]
+  results <- lapply(years, function(year) get_data(year=year, variables=variables, geography_level=geography_level))
+  names(results) <- years
+  return(results)
+}
