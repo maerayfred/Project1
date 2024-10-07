@@ -1,18 +1,18 @@
 source("src/census_variables.R")
 
-test_1 <- function () {
+test_1_cv <- function () {
   # test default get all
   var_list <- get_variable_list()
   return (var_list)
 }
 
-test_2 <- function () {
+test_2_cv <- function () {
   # test get specific
   var_list <- get_variable_list(subset=c("PWGTP"))
   return (var_list)
 }
 
-test_3 <- function () {
+test_3_cv <- function () {
   # test if a variable is numeric or not from all the desired variables
   all_var_list <- c("AGEP", "PWGTP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP", "SEX", "FER", "HHL", "HISPEED", "JWTRNS", "SCH", "SCHL", "REGION", "DIVISION", "ST")
   numeric_var_list <- c("AGEP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP", "PWGTP")
@@ -35,7 +35,7 @@ test_3 <- function () {
   return (TRUE)
 }
 
-test_4 <- function () {
+test_4_cv <- function () {
   # test get valid variable values
   variable_list <- get_variable_list(subset=c("SEX", "PWGTP", "GRPIP"))
   cat_only <- get_valid_variable_values("SEX", variable_list)
@@ -44,7 +44,7 @@ test_4 <- function () {
   return (list(cat_only_SEX=cat_only, num_only_PWGTP=num_only, both_GRPIP=both))
 }
 
-test_5 <- function () {
+test_5_cv <- function () {
   # test is valid variable value
   variable_list <- get_variable_list(subset=c("GRPIP", "AGEP", "SEX"))
   print("GRPIP")
@@ -96,13 +96,13 @@ test_5 <- function () {
   return (TRUE)
 }
 
-# test_1
-# str(tail(test_1(), 3), max.level=4, list.len=6)
-# test_2
-# str(test_2(), max.level = 4, list.len = 6)
-# test_3
-# test_3()
-# test_4
-# test_4()
-# test_5
-# test_5()
+# test_1_cv
+# str(tail(test_1_cv(), 3), max.level=4, list.len=6)
+# test_2_cv
+# str(test_2_cv(), max.level = 4, list.len = 6)
+# test_3_cv
+# test_3_cv()
+# test_4_cv
+# test_4_cv()
+# test_5_cv
+# test_5_cv()

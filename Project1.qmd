@@ -5,118 +5,119 @@ editor: source
 ---
 
 ## Data Processing
-### Creating calling all the packages we need but coding so that they are not visable on the quarto document. 
-```{r}
-#| output: false
-# Calling libraries
-#library(tidyverse)
-#library(tidycensus)
-#library(httr)
-#library(jsonlite)
-#library(glue)
-
-```
 
 ### In this step, we create the URL string, starting with the base URL and incorporating our default variables from get_vals. We set a default geography of state 10 (Delaware) to prevent unintended large API calls.
 
 ```{r}
-source("src/census_query.R")
-census_url
-census_tibble
-source("test/test_census_query.R")
-test_1
-test_1()
-test_2
-test_2()
-test_3
-test_3()
-test_4
-test_4()
+#| file: "src/census_query.R"
+```
+
+```{r}
+#| file: "test/test_census_query.R"
+```
+
+
+```{r}
+test_1_cq()
+test_2_cq()
+test_3_cq()
+test_4_cq()
 ```
 
 ### We're creating a function to access API data, allowing the year to change with a default of 2022, along with a list of valid variables for the PUMS API. We're accessing all valid API variables and subsetting them according to project instructions. We also create a function to check if the variables in the subset are numeric or character.
 
 ```{r}
-source("src/census_variables.R")
-get_variable_list
-is_numeric_variable
-get_valid_variable_values
-is_valid_variable_value
-source("test/test_census_variables.R")
-test_1
-str(tail(test_1(), 3), max.level=4, list.len=6)
-test_2
-str(test_2(), max.level = 4, list.len = 6)
-test_3
-test_3()
-test_4
-test_4()
-test_5
-test_5()
+#| file: "src/census_variables.R"
+```
 
+```{r}
+#| file: "test/test_census_variables.R"
+```
+
+```{r}
+str(tail(test_1_cv(), 3), max.level=4, list.len=6)
+str(test_2_cv(), max.level = 4, list.len = 6)
+test_3_cv()
+test_4_cv()
+test_5_cv()
 ```
 
 ### We're creating a function that matches valid variables with their corresponding numeric ranges and character items. 
 
 ```{r}
-source("src/input_validation.R")
-is_valid_variable_input
-source("test/test_input_validation.R")
-test_1
-test_1()
-test_2
-test_2()
-test_3
-test_3()
-test_4
-test_4()
-test_5
-test_5()
-test_6
-test_6()
+#| file: "src/input_validation.R"
+```
+
+```{r}
+#| file: "test/test_input_validation.R"
+```
+
+```{r}
+test_1_iv()
+test_2_iv()
+test_3_iv()
+test_4_iv()
+test_5_iv()
+test_6_iv()
 ```
 
 
 ### TODO
-```{r}
-source("src/post_processing.R")
-fix_time_interval_categories
-convert_columns_to_numeric
-remove_categorical_row_items_in_numeric
-convert_categorical_to_factor
-source("test/test_post_processing.R")
-test_1
-data_1 <- test_1()
-str(data_1$data)
-str(data_1$var_info, max.level=2, list.len=5)
-test_2
-data_2 <- test_2()
-str(data_2, max.level=2)
-test_3
-data_3 <- test_3()
-# doesnt have 0 in the int list anymore
-head(table(data_3$data$AGEP), 5)
 
-test_4
-data_4 <- test_4()
-str(data_4$data)
-str(data_4$var_info, max.level=3, list.len=5)
+```{r}
+#| file: "src/post_processing.R"
+```
+
+```{r}
+#| file: "test/test_post_processing.R"
+```
+
+```{r}
+data_1_pp <- test_1_pp()
+str(data_1_pp$data)
+str(data_1_pp$var_info, max.level=2, list.len=5)
+data_2_pp <- test_2_pp()
+str(data_2_pp, max.level=2)
+data_3_pp <- test_3_pp()
+# doesnt have 0 in the int list anymore
+head(table(data_3_pp$data$AGEP), 5)
+
+data_4_pp <- test_4_pp()
+str(data_4_pp$data)
+str(data_4_pp$var_info, max.level=3, list.len=5)
 ```
 
 
 ### We're accessing all valid API variables and subsetting them according to project instructions. We also create a function to check if the variables in the subset are numeric or character. We're creating a function that matches valid variables with their corresponding numeric ranges and character items. We're processing time variables by separating the intervals, updating morning/evening abbreviations for usability, and calculating the midpoint to derive a single time point.
 
 ```{r}
-source("src/main.R")
-get_data
-get_data_years
-source("test/test_main.R")
-test_1
-data_1 <- test_1()
-data_1$URL
-str(data_1$parsed)
-test_2
-data_2 <- test_2()
-str(data_2, max.level = 2)
+#| file: "src/main.R"
 ```
 
+```{r}
+#| file: "test/test_main.R"
+```
+
+```{r}
+data_1_m <- test_1_m()
+data_1_m$URL
+str(data_1_m$parsed)
+data_2_m <- test_2_m()
+str(data_2_m, max.level = 2)
+```
+
+
+### TODO
+
+```{r}
+#| file: "src/summarizing.R"
+```
+
+```{r}
+#| file: "test/test_summarizing.R"
+```
+
+```{r}
+test_1_s()
+test_2_s()
+```

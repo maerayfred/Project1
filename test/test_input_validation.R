@@ -1,6 +1,6 @@
 source("src/input_validation.R")
 
-test_1 <- function() {
+test_1_iv <- function() {
   # test valid default = delim
   valid_list <- c("AGEP", "PWGTP", "SEX")
 
@@ -18,7 +18,7 @@ test_1 <- function() {
   return (TRUE)
 }
 
-test_2 <- function() {
+test_2_iv <- function() {
   # test valid alternate : delim
   valid_list <- c("AGEP", "PWGTP", "SEX")
 
@@ -36,7 +36,7 @@ test_2 <- function() {
   return (TRUE)
 }
 
-test_3 <- function() {
+test_3_iv <- function() {
   # test valid alternate : delim and including the delim in the match
   valid_list <- c("state:", "division:", "region:")
 
@@ -55,7 +55,7 @@ test_3 <- function() {
   return (TRUE)
 }
 
-test_4 <- function() {
+test_4_iv <- function() {
   # test invalid default = delim
   valid_list <- c("AGEP", "PWGTP", "SEX")
 
@@ -74,7 +74,7 @@ test_4 <- function() {
   return (TRUE)
 }
 
-test_5 <- function() {
+test_5_iv <- function() {
   # test invalid alternate : delim
   valid_list <- c("AGEP", "PWGTP", "SEX")
 
@@ -93,7 +93,7 @@ test_5 <- function() {
   return (TRUE)
 }
 
-test_6 <- function() {
+test_6_iv <- function() {
   # test invalid alternate : delim and including the delim in the match
   valid_list <- c("state:", "division:", "region:")
 
@@ -113,9 +113,9 @@ test_6 <- function() {
   return (TRUE)
 }
 
-# test_1()
-# test_2()
-# test_3()
-# test_4()
-# test_5()
-# test_6()
+# test_1_iv()
+# test_2_iv()
+# test_3_iv()
+# test_4_iv()
+# test_5_iv()
+# test_6_iv()

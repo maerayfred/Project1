@@ -3,7 +3,7 @@ source("src/census_variables.R")
 source("src/post_processing.R")
 
 
-test_1 <- function() {
+test_1_pp <- function() {
   # test the time value conversions for the 2 columns JWAP and JWDP
   data <- census_tibble(census_url(year="2022", get_vals=c("JWAP", "JWDP"), for_val="state:10"))
   # lot of duplicate rows - get the unique ones
@@ -19,7 +19,7 @@ test_1 <- function() {
   return (list(data=data, var_info=var_filtered))
 }
 
-test_2 <- function() {
+test_2_pp <- function() {
   # test converting columns to numeric, given a list of numeric columns and a list of columns to exclude
   # str of data will have int where a character was
   data <- census_tibble(census_url(year="2022", get_vals=c("AGEP", "SEX", "JWAP"), for_val="state:10"))
@@ -27,7 +27,7 @@ test_2 <- function() {
   return (data)
 }
 
-test_3 <- function() {
+test_3_pp <- function() {
   # test the removal of categorical items in numeric columns (removes the 0)
   data <- census_tibble(census_url(year="2022", get_vals="AGEP", for_val="state:10"))
   var_filtered <- get_variable_list("2022", "AGEP")
@@ -38,7 +38,7 @@ test_3 <- function() {
   return (list(data=data, var_info=var_filtered))
 }
 
-test_4 <- function() {
+test_4_pp <- function() {
   # test the replacement of the categorical items with the factor labels
   data <- census_tibble(census_url(year="2022", get_vals=c("AGEP", "SEX", "HISPEED"), for_val="state:10"))
   var_filtered <- get_variable_list("2022", c("AGEP", "SEX", "HISPEED", "ST"))
@@ -59,15 +59,15 @@ test_4 <- function() {
   return(list(data=data, var_info=var_filtered))
 }
 
-# data_1 <- test_1()
-# str(data_1$data)
-# str(data_1$var_info, max.level=2, list.len=5)
-# data_2 <- test_2()
-# str(data_2, max.level=2)
-# data_3 <- test_3()
+# data_1_pp <- test_1_pp()
+# str(data_1_pp$data)
+# str(data_1_pp$var_info, max.level=2, list.len=5)
+# data_2_pp <- test_2_pp()
+# str(data_2_pp, max.level=2)
+# data_3_pp <- test_3_pp()
 # # doesnt have 0 in the int list anymore
-# head(table(data_3$data$AGEP), 5)
+# head(table(data_3_pp$data$AGEP), 5)
 #
-# data_4 <- test_4()
-# str(data_4$data)
-# str(data_4$var_info, max.level=3, list.len=5)
+# data_4_pp <- test_4_pp()
+# str(data_4_pp$data)
+# str(data_4_pp$var_info, max.level=3, list.len=5)

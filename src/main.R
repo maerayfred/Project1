@@ -114,6 +114,8 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
 
   # TODO time is not split into a numeric value yet
 
+  # add census class to the parsed tibble
+  class(parsed_tibble) <- c("census", class(parsed_tibble))
   return(list(parsed=parsed_tibble, var_info=filtered_var_info, URL=URL))
 }
 
