@@ -33,7 +33,7 @@ test_3_pp <- function() {
   var_filtered <- get_variable_list("2022", "AGEP")
   data <- data |>
     distinct(.keep_all = TRUE) |>
-    convert_columns_to_numeric(c("AGEP")) |>
+    convert_columns_to_numeric("AGEP") |>
     remove_categorical_row_items_in_numeric(var_filtered)
   return (list(data=data, var_info=var_filtered))
 }

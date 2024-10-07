@@ -10,7 +10,7 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
   }
 
   # ensure year is between 2010 and 2022 (inclusive)
-  year_options <- c(2010:2022)
+  year_options <- 2010:2022
   if (!year %in% year_options) {
     stop(glue("Invalid year {year}, should be one of [{glue_collapse(year_options, sep=', ')}]"))
   }
@@ -44,8 +44,15 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
   }
   # use the most updated variable list for geography level - not in prior years but still can filter
   # for those years, use prior variables for rest though, in case mapping changed for some reason
-  newest_geography_variables <- get_variable_list(2022, c("ST", "REGION", "DIVISION"))
-  filtered_var_info <- c(filtered_var_info, newest_geography_variables)
+  needed_items <- list()
+  needed_items <- ifelse(is.null(filtered_var_info$ST), c(needed_items, "ST"), needed_items)
+  needed_items <- ifelse(is.null(filtered_var_info$REGION), c(needed_items, "REGION"), needed_items)
+  needed_items <- ifelse(is.null(filtered_var_info$DIVISION), c(needed_items, "DIVISION"), needed_items)
+
+  if (!is.null(needed_items)) {
+    newest_geography_variables <- get_variable_list(2022, needed_items)
+    filtered_var_info <- c(filtered_var_info, newest_geography_variables)
+  }
 
   # PWGTP always included
   # AGEP as default, at least 1 numeric variable needs to be returned aside from PWGTP
@@ -56,7 +63,7 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
 
   numeric_items_count <- 0
   categorical_items_count <- 0
-  numeric_item_list <- c()
+  numeric_item_list <- NULL
 
   # check and filter the passed in variables
   for (var in variables) {
@@ -87,7 +94,7 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
     # print(get_valid_variable_values("SEX", filtered_var_info))
   }
 
-  var_with_filter <- c()
+  var_with_filter <- NULL
   for (var in variables) {
     if (regexpr("=", var) != -1) {
       var_with_filter <- c(var_with_filter, var)

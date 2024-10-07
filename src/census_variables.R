@@ -36,7 +36,7 @@ get_valid_variable_values <- function(var, var_info_tibble) {
   var_range <- var_info_tibble[[var]]$values$range
   var_item <- var_info_tibble[[var]]$values$item
 
-  ret <- c()
+  ret <- NULL
 
   if (!is.null(var_item)) {
     ret <- c(ret, names(var_item))

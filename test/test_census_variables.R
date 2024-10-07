@@ -8,7 +8,7 @@ test_1_cv <- function () {
 
 test_2_cv <- function () {
   # test get specific
-  var_list <- get_variable_list(subset=c("PWGTP"))
+  var_list <- get_variable_list(subset="PWGTP")
   return (var_list)
 }
 

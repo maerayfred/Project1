@@ -16,7 +16,7 @@ fix_time_interval_categories <- function(item, value_list) {
     mutate(midpoint = format(left + (right - left)/2, "%H:%M:%S")) |>
     select("midpoint")
 
-  value_map <- c()
+  value_map <- NULL
   for (value in value_list) {
     if (value == "0") {
       value_map <- c(value_map, "NA")
