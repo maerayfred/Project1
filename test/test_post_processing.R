@@ -58,16 +58,3 @@ test_4_pp <- function() {
 
   return(list(data=data, var_info=var_filtered))
 }
-
-# data_1_pp <- test_1_pp()
-# str(data_1_pp$data)
-# str(data_1_pp$var_info, max.level=2, list.len=5)
-# data_2_pp <- test_2_pp()
-# str(data_2_pp, max.level=2)
-# data_3_pp <- test_3_pp()
-# # doesnt have 0 in the int list anymore
-# head(table(data_3_pp$data$AGEP), 5)
-#
-# data_4_pp <- test_4_pp()
-# str(data_4_pp$data)
-# str(data_4_pp$var_info, max.level=3, list.len=5)

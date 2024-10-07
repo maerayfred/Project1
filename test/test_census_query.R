@@ -30,8 +30,3 @@ test_4_cq <- function() {
   URL <- test_3_cq()
   return (census_tibble(URL))
 }
-
-# data_1_cq <- test_1_cq()
-# data_2_cq <- test_2_cq()
-# data_3_cq <- test_3_cq()
-# data_4_cq <- test_4_cq()

@@ -112,10 +112,3 @@ test_6_iv <- function() {
 
   return (TRUE)
 }
-
-# test_1_iv()
-# test_2_iv()
-# test_3_iv()
-# test_4_iv()
-# test_5_iv()
-# test_6_iv()

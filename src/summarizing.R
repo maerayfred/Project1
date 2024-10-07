@@ -62,6 +62,6 @@ plot_census <- function(x, categorical="SCH", numerical="AGEP") {
   }
 
   x |>
-    ggplot(aes(x=!!sym(categorical), y=!!sym(numerical), weight=PWGTP)) +
+    ggplot(aes(x=!!sym(categorical), y=!!sym(numerical), weight=PWGTP, fill=!!sym(categorical), color=!!sym(categorical))) +
       geom_boxplot()
 }

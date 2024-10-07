@@ -95,14 +95,3 @@ test_5_cv <- function () {
 
   return (TRUE)
 }
-
-# test_1_cv
-# str(tail(test_1_cv(), 3), max.level=4, list.len=6)
-# test_2_cv
-# str(test_2_cv(), max.level = 4, list.len = 6)
-# test_3_cv
-# test_3_cv()
-# test_4_cv
-# test_4_cv()
-# test_5_cv
-# test_5_cv()

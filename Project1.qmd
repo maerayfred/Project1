@@ -8,116 +8,175 @@ editor: source
 
 ### In this step, we create the URL string, starting with the base URL and incorporating our default variables from get_vals. We set a default geography of state 10 (Delaware) to prevent unintended large API calls.
 
+#### Load functions created for URL creation and tibble creation from URL response.
 ```{r}
 #| file: "src/census_query.R"
 ```
 
+#### Load the test file that shows these usages.
 ```{r}
 #| file: "test/test_census_query.R"
 ```
 
 
 ```{r}
+# Calls census URL with no input parameters (default)
 test_1_cq()
+# Calls census URL with overridden NULL parameters (base URL returned)
 test_2_cq()
+# Calls census URL with fairly specific URL parameters given of different forms
 test_3_cq()
+# Gets the tibble from the test 3 URL
 test_4_cq()
 ```
 
 ### We're creating a function to access API data, allowing the year to change with a default of 2022, along with a list of valid variables for the PUMS API. We're accessing all valid API variables and subsetting them according to project instructions. We also create a function to check if the variables in the subset are numeric or character.
 
+#### Load functions for getting census variables data.
 ```{r}
 #| file: "src/census_variables.R"
 ```
 
+#### Load the test file that shows these usages.
 ```{r}
 #| file: "test/test_census_variables.R"
 ```
 
 ```{r}
+# Show a portion of getting all variables - will be of a list of 512 items
 str(tail(test_1_cv(), 3), max.level=4, list.len=6)
+
+# Show a subset of this list, in this case 1 item - this one is a post-filter of the full 512.
 str(test_2_cv(), max.level = 4, list.len = 6)
+
+# Run through every iteration of expected values for what is numeric and what is categorical.
+# Would return False if it encountered an expectation mismatch.
 test_3_cv()
+
+# Show output of getting the variables allowed values. Shows all 3 versions.
+# One that is only categorical, one that is only numerical, and one that is mixed.
 test_4_cv()
+
+# Goes through valid and invalid combinations. Will return True if expectation matches.
+# Also prints as it is going, to show the expectations from the variable list to what is being tested.
 test_5_cv()
 ```
 
 ### We're creating a function that matches valid variables with their corresponding numeric ranges and character items. 
 
+#### Load functions used for input validation.
 ```{r}
 #| file: "src/input_validation.R"
 ```
 
+#### Load tests on the validation to show usages.
 ```{r}
 #| file: "test/test_input_validation.R"
 ```
 
 ```{r}
+# Checks valid defaults. Basically just prefix matching and delimiter of `=`
 test_1_iv()
+
+# Checks valid, but with different delimiter.
 test_2_iv()
+
+# Checks valid, but different delimiter and prefix must include delimiter.
 test_3_iv()
+
+# Checks invalid, must be found as not valid because of violations of prefix.
 test_4_iv()
+
+# Checks invalid, alternate delimiter.
 test_5_iv()
+
+# Checks invalid, delimiter included.
 test_6_iv()
 ```
 
 
-### TODO
+### We're taking the output tibble from the built URL and doing the data processing on it to convert column types and fix things based on variable API data. We're processing the time variables by separating the intervals, updating morning/evening abbreviations for usability, and calculating the midpoint to derive a single time point.
 
+#### Load the functions used to process the output tibble from census data.
 ```{r}
 #| file: "src/post_processing.R"
 ```
 
+#### Test and example output of post processing.
 ```{r}
 #| file: "test/test_post_processing.R"
 ```
 
 ```{r}
+# Show the time conversion in action.
 data_1_pp <- test_1_pp()
 str(data_1_pp$data)
+# Show the sorted time list to compare.
 str(data_1_pp$var_info, max.level=2, list.len=5)
+
+# Show the expected column for numeric is converted to int column from character.
 data_2_pp <- test_2_pp()
 str(data_2_pp, max.level=2)
+
+# Show that 0 is not in the table, because it fell out of the min-max range and was in the item section as
+# a categorical type value for the numeric column.
 data_3_pp <- test_3_pp()
 # doesnt have 0 in the int list anymore
 head(table(data_3_pp$data$AGEP), 5)
 
+# Show the factor change with preserved comparison columns of what changed.
 data_4_pp <- test_4_pp()
 str(data_4_pp$data)
+# Show a sorted list to easily compare the factor conversion.
 str(data_4_pp$var_info, max.level=3, list.len=5)
 ```
 
 
-### We're accessing all valid API variables and subsetting them according to project instructions. We also create a function to check if the variables in the subset are numeric or character. We're creating a function that matches valid variables with their corresponding numeric ranges and character items. We're processing time variables by separating the intervals, updating morning/evening abbreviations for usability, and calculating the midpoint to derive a single time point.
+### We're putting all the prior functions and data processing into one function with extra input validation to match with the requirements.The final tibble, URL, and variable list is returned for use.
 
+#### Load the main function where it gets the tibble and applies all the input constraints and data processing.
 ```{r}
 #| file: "src/main.R"
 ```
 
+#### Load the tests that display the usage of the main get_data function and the list version (multiple years).
 ```{r}
 #| file: "test/test_main.R"
 ```
 
 ```{r}
+# Call the main get_data function with all the valid values and the default state:10.
 data_1_m <- test_1_m()
+# Returned function gives the URL, the filtered variable list with everything provided, and the tibble.
 data_1_m$URL
 str(data_1_m$parsed)
+
+# Calls for every year - some missing variables, which is handled.
 data_2_m <- test_2_m()
 str(data_2_m, max.level = 2)
 ```
 
+## Summarizing and Plotting
 
-### TODO
+### We create the functions for both summarizing and plotting a census tibble (which is what is returned as the tibble from the get_data).
 
+#### Load the summarizing functions. One is for counts/mean/sd, another is for plotting.
 ```{r}
 #| file: "src/summarizing.R"
 ```
 
+#### Load the example usages.
 ```{r}
 #| file: "test/test_summarizing.R"
 ```
 
 ```{r}
+# Gives a view of the summary values.
 test_1_s()
+
+# Plots the default AGEP and SCH
 test_2_s()
 ```
+
+## Investigating
+
