@@ -12,6 +12,7 @@ test_1_m <- function() {
   )
   return (return_data)
 }
+data_1_m <- test_1_m()
 
 test_2_m <- function() {
   # test get all years in range

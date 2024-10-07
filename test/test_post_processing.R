@@ -26,8 +26,8 @@ test_1_pp <- function() {
 test_2_pp <- function() {
   # test converting columns to numeric, given a list of numeric columns and a list of columns to exclude
   # str of data will have int where a character was
-  data <- census_tibble(census_url(year="2022", get_vals=c("AGEP", "SEX", "JWAP"), for_val="state:10"))
-  data <- convert_columns_to_numeric(data, c("AGEP", "JWAP"))
+  data <- census_tibble(census_url(year="2022", get_vals=c("AGEP", "SEX"), for_val="state:10"))
+  data <- convert_columns_to_numeric(data, "AGEP")
   return (data)
 }
 

@@ -36,6 +36,7 @@ summary_census <- function(
     if (col == "PWGTP") {
       next
     }
+    # remove non_numeric items, like NA from calculation
     num_mean_sd_result[[col]] <- new_data_num |>
       mutate(new_mult = !!sym(col) * PWGTP) |>
       summarize(mean=sum(new_mult) / sum(PWGTP),

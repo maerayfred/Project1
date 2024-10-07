@@ -22,8 +22,8 @@ fix_time_interval_categories <- function(item, value_list) {
   mid_map <- NULL
   for (value in value_list) {
     if (value == "0") {
-      value_map <- c(value_map, "NA")
-      mid_map <- c(mid_map, "NA")
+      value_map <- c(value_map, 0)
+      mid_map <- c(mid_map, 0)
       next
     }
     value_map <- c(value_map, item_df_transformed$hour_value[as.numeric(value)])
