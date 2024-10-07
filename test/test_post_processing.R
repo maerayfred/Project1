@@ -9,8 +9,12 @@ test_1_pp <- function() {
   # lot of duplicate rows - get the unique ones
   data <- data |> distinct(.keep_all = TRUE)
   var_filtered <- get_variable_list("2022", c("JWAP", "JWDP"))
-  data$JWAP_fixed <- fix_time_interval_categories(var_filtered$JWAP$values$item, data$JWAP)
-  data$JWDP_fixed <- fix_time_interval_categories(var_filtered$JWDP$values$item, data$JWDP)
+  fixed_JWAP <- fix_time_interval_categories(var_filtered$JWAP$values$item, data$JWAP)
+  fixed_JWDP <- fix_time_interval_categories(var_filtered$JWDP$values$item, data$JWDP)
+  data$JWAP_fixed <- fixed_JWAP$value_list
+  data$JWDP_fixed <- fixed_JWDP$value_list
+  data$JWAP_midpoints <- fixed_JWAP$midpoints
+  data$JWDP_midpoints <- fixed_JWDP$midpoints
 
   # order the var_filtered items columns for better viewing purposes
   var_filtered$JWAP <- var_filtered$JWAP$values$item[order(names(var_filtered$JWAP$values$item))]
@@ -23,7 +27,7 @@ test_2_pp <- function() {
   # test converting columns to numeric, given a list of numeric columns and a list of columns to exclude
   # str of data will have int where a character was
   data <- census_tibble(census_url(year="2022", get_vals=c("AGEP", "SEX", "JWAP"), for_val="state:10"))
-  data <- convert_columns_to_numeric(data, c("AGEP", "JWAP"), "JWAP")
+  data <- convert_columns_to_numeric(data, c("AGEP", "JWAP"))
   return (data)
 }
 

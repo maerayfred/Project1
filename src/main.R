@@ -106,20 +106,18 @@ get_data <- function(year="2022", variables=c("AGEP", "PWGTP", "SEX"), geography
   parsed_tibble <- census_tibble(URL)
 
   if ("JWAP" %in% names(parsed_tibble)) {
-    parsed_tibble$JWAP <- fix_time_interval_categories(filtered_var_info$JWAP$values$item, parsed_tibble$JWAP)
+    parsed_tibble$JWAP <- fix_time_interval_categories(filtered_var_info$JWAP$values$item, parsed_tibble$JWAP)$value_list
   }
   if ("JWDP" %in% names(parsed_tibble)) {
-    parsed_tibble$JWDP <- fix_time_interval_categories(filtered_var_info$JWDP$values$item, parsed_tibble$JWDP)
+    parsed_tibble$JWDP <- fix_time_interval_categories(filtered_var_info$JWDP$values$item, parsed_tibble$JWDP)$value_list
   }
   # print(glue("Numeric item list, gets converted to int - [{glue_collapse(numeric_item_list, sep=', ')}]"))
   # print(glue("List without JWAP and JWDP - [{glue_collapse(numeric_item_list[!numeric_item_list %in% c('JWDP', 'JWAP')], sep=', ')}]"))
 
   parsed_tibble <- parsed_tibble |>
-    convert_columns_to_numeric(numeric_item_list, exclude_list=c("JWDP", "JWAP")) |>
+    convert_columns_to_numeric(numeric_item_list) |>
     remove_categorical_row_items_in_numeric(filtered_var_info) |>
     convert_categorical_to_factor(filtered_var_info)
-
-  # TODO time is not split into a numeric value yet
 
   # add census class to the parsed tibble
   class(parsed_tibble) <- c("census", class(parsed_tibble))

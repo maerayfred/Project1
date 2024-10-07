@@ -14,22 +14,27 @@ fix_time_interval_categories <- function(item, value_list) {
     mutate(left = parse_date_time(left, orders = "I:M p", tz = "UTC"),
            right = parse_date_time(right, orders = "I:M p", tz = "UTC")) |>
     mutate(midpoint = format(left + (right - left)/2, "%H:%M:%S")) |>
-    select("midpoint")
+    separate_wider_delim(cols="midpoint", delim=":", names=c("hour", "minute", "second"), cols_remove = FALSE) |>
+    mutate(hour_value = as.numeric(hour) + as.numeric(minute)/60 + as.numeric(second)/3600) |>
+    select("midpoint", "hour_value")
 
   value_map <- NULL
+  mid_map <- NULL
   for (value in value_list) {
     if (value == "0") {
       value_map <- c(value_map, "NA")
+      mid_map <- c(mid_map, "NA")
       next
     }
-    value_map <- c(value_map, item_df_transformed$midpoint[as.numeric(value)])
+    value_map <- c(value_map, item_df_transformed$hour_value[as.numeric(value)])
+    mid_map <- c(mid_map, item_df_transformed$midpoint[as.numeric(value)])
   }
-  return(value_list=value_map)
+  return(list(value_list=value_map, midpoints=mid_map))
 }
 
 convert_columns_to_numeric <- function(tibble, numeric_item_list, exclude_list=NULL) {
   tibble <- tibble |>
-    mutate(across(all_of(numeric_item_list[!numeric_item_list %in% exclude_list]), as.integer))
+    mutate(across(all_of(numeric_item_list[!numeric_item_list %in% exclude_list]), as.numeric))
 
   return (tibble)
 }
@@ -56,7 +61,7 @@ convert_categorical_to_factor <- function(tibble, variable_info) {
   # does some specific treatment of JWAP, JWDP, state, region, division - particular to census data
   character_columns <- tibble |> select(where(is.character))
   for (col in names(character_columns)) {
-    if (col %in% c("JWAP", "JWDP") | (!col %in% names(variable_info) & !col %in% c("state", "region", "division"))) {
+    if (!col %in% names(variable_info) & !col %in% c("state", "region", "division")) {
       next
     }
     col_var <- col

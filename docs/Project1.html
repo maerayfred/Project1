@@ -739,68 +739,73 @@ $both_GRPIP
 <span id="cb41-14"><a href="#cb41-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">left =</span> <span class="fu">parse_date_time</span>(left, <span class="at">orders =</span> <span class="st">"I:M p"</span>, <span class="at">tz =</span> <span class="st">"UTC"</span>),</span>
 <span id="cb41-15"><a href="#cb41-15" aria-hidden="true" tabindex="-1"></a>           <span class="at">right =</span> <span class="fu">parse_date_time</span>(right, <span class="at">orders =</span> <span class="st">"I:M p"</span>, <span class="at">tz =</span> <span class="st">"UTC"</span>)) <span class="sc">|&gt;</span></span>
 <span id="cb41-16"><a href="#cb41-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">midpoint =</span> <span class="fu">format</span>(left <span class="sc">+</span> (right <span class="sc">-</span> left)<span class="sc">/</span><span class="dv">2</span>, <span class="st">"%H:%M:%S"</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb41-17"><a href="#cb41-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(<span class="st">"midpoint"</span>)</span>
-<span id="cb41-18"><a href="#cb41-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-19"><a href="#cb41-19" aria-hidden="true" tabindex="-1"></a>  value_map <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb41-20"><a href="#cb41-20" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (value <span class="cf">in</span> value_list) {</span>
-<span id="cb41-21"><a href="#cb41-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (value <span class="sc">==</span> <span class="st">"0"</span>) {</span>
-<span id="cb41-22"><a href="#cb41-22" aria-hidden="true" tabindex="-1"></a>      value_map <span class="ot">&lt;-</span> <span class="fu">c</span>(value_map, <span class="st">"NA"</span>)</span>
-<span id="cb41-23"><a href="#cb41-23" aria-hidden="true" tabindex="-1"></a>      <span class="cf">next</span></span>
-<span id="cb41-24"><a href="#cb41-24" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb41-25"><a href="#cb41-25" aria-hidden="true" tabindex="-1"></a>    value_map <span class="ot">&lt;-</span> <span class="fu">c</span>(value_map, item_df_transformed<span class="sc">$</span>midpoint[<span class="fu">as.numeric</span>(value)])</span>
-<span id="cb41-26"><a href="#cb41-26" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb41-27"><a href="#cb41-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="at">value_list=</span>value_map)</span>
-<span id="cb41-28"><a href="#cb41-28" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb41-29"><a href="#cb41-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-30"><a href="#cb41-30" aria-hidden="true" tabindex="-1"></a>convert_columns_to_numeric <span class="ot">&lt;-</span> <span class="cf">function</span>(tibble, numeric_item_list, <span class="at">exclude_list=</span><span class="cn">NULL</span>) {</span>
-<span id="cb41-31"><a href="#cb41-31" aria-hidden="true" tabindex="-1"></a>  tibble <span class="ot">&lt;-</span> tibble <span class="sc">|&gt;</span></span>
-<span id="cb41-32"><a href="#cb41-32" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">all_of</span>(numeric_item_list[<span class="sc">!</span>numeric_item_list <span class="sc">%in%</span> exclude_list]), as.integer))</span>
-<span id="cb41-33"><a href="#cb41-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-34"><a href="#cb41-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> (tibble)</span>
-<span id="cb41-35"><a href="#cb41-35" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb41-36"><a href="#cb41-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-37"><a href="#cb41-37" aria-hidden="true" tabindex="-1"></a>remove_categorical_row_items_in_numeric <span class="ot">&lt;-</span> <span class="cf">function</span>(tibble, variable_info) {</span>
-<span id="cb41-38"><a href="#cb41-38" aria-hidden="true" tabindex="-1"></a>  <span class="co"># takes a tibble and removes rows where the numeric column is not in the range given for the variable</span></span>
-<span id="cb41-39"><a href="#cb41-39" aria-hidden="true" tabindex="-1"></a>  numeric_columns <span class="ot">&lt;-</span> tibble <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="fu">where</span>(is.numeric))</span>
-<span id="cb41-40"><a href="#cb41-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-41"><a href="#cb41-41" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (col <span class="cf">in</span> <span class="fu">names</span>(numeric_columns)) {</span>
-<span id="cb41-42"><a href="#cb41-42" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Get the min and max range for the current column from variable_info</span></span>
-<span id="cb41-43"><a href="#cb41-43" aria-hidden="true" tabindex="-1"></a>    min_val <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(variable_info[[col]]<span class="sc">$</span>values<span class="sc">$</span>range<span class="sc">$</span>min)</span>
-<span id="cb41-44"><a href="#cb41-44" aria-hidden="true" tabindex="-1"></a>    max_val <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(variable_info[[col]]<span class="sc">$</span>values<span class="sc">$</span>range<span class="sc">$</span>max)</span>
+<span id="cb41-17"><a href="#cb41-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">separate_wider_delim</span>(<span class="at">cols=</span><span class="st">"midpoint"</span>, <span class="at">delim=</span><span class="st">":"</span>, <span class="at">names=</span><span class="fu">c</span>(<span class="st">"hour"</span>, <span class="st">"minute"</span>, <span class="st">"second"</span>), <span class="at">cols_remove =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb41-18"><a href="#cb41-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">hour_value =</span> <span class="fu">as.numeric</span>(hour) <span class="sc">+</span> <span class="fu">as.numeric</span>(minute)<span class="sc">/</span><span class="dv">60</span> <span class="sc">+</span> <span class="fu">as.numeric</span>(second)<span class="sc">/</span><span class="dv">3600</span>) <span class="sc">|&gt;</span></span>
+<span id="cb41-19"><a href="#cb41-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(<span class="st">"midpoint"</span>, <span class="st">"hour_value"</span>)</span>
+<span id="cb41-20"><a href="#cb41-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-21"><a href="#cb41-21" aria-hidden="true" tabindex="-1"></a>  value_map <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb41-22"><a href="#cb41-22" aria-hidden="true" tabindex="-1"></a>  mid_map <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb41-23"><a href="#cb41-23" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (value <span class="cf">in</span> value_list) {</span>
+<span id="cb41-24"><a href="#cb41-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (value <span class="sc">==</span> <span class="st">"0"</span>) {</span>
+<span id="cb41-25"><a href="#cb41-25" aria-hidden="true" tabindex="-1"></a>      value_map <span class="ot">&lt;-</span> <span class="fu">c</span>(value_map, <span class="st">"NA"</span>)</span>
+<span id="cb41-26"><a href="#cb41-26" aria-hidden="true" tabindex="-1"></a>      mid_map <span class="ot">&lt;-</span> <span class="fu">c</span>(mid_map, <span class="st">"NA"</span>)</span>
+<span id="cb41-27"><a href="#cb41-27" aria-hidden="true" tabindex="-1"></a>      <span class="cf">next</span></span>
+<span id="cb41-28"><a href="#cb41-28" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb41-29"><a href="#cb41-29" aria-hidden="true" tabindex="-1"></a>    value_map <span class="ot">&lt;-</span> <span class="fu">c</span>(value_map, item_df_transformed<span class="sc">$</span>hour_value[<span class="fu">as.numeric</span>(value)])</span>
+<span id="cb41-30"><a href="#cb41-30" aria-hidden="true" tabindex="-1"></a>    mid_map <span class="ot">&lt;-</span> <span class="fu">c</span>(mid_map, item_df_transformed<span class="sc">$</span>midpoint[<span class="fu">as.numeric</span>(value)])</span>
+<span id="cb41-31"><a href="#cb41-31" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb41-32"><a href="#cb41-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">value_list=</span>value_map, <span class="at">midpoints=</span>mid_map))</span>
+<span id="cb41-33"><a href="#cb41-33" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb41-34"><a href="#cb41-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-35"><a href="#cb41-35" aria-hidden="true" tabindex="-1"></a>convert_columns_to_numeric <span class="ot">&lt;-</span> <span class="cf">function</span>(tibble, numeric_item_list, <span class="at">exclude_list=</span><span class="cn">NULL</span>) {</span>
+<span id="cb41-36"><a href="#cb41-36" aria-hidden="true" tabindex="-1"></a>  tibble <span class="ot">&lt;-</span> tibble <span class="sc">|&gt;</span></span>
+<span id="cb41-37"><a href="#cb41-37" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">all_of</span>(numeric_item_list[<span class="sc">!</span>numeric_item_list <span class="sc">%in%</span> exclude_list]), as.numeric))</span>
+<span id="cb41-38"><a href="#cb41-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-39"><a href="#cb41-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> (tibble)</span>
+<span id="cb41-40"><a href="#cb41-40" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb41-41"><a href="#cb41-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-42"><a href="#cb41-42" aria-hidden="true" tabindex="-1"></a>remove_categorical_row_items_in_numeric <span class="ot">&lt;-</span> <span class="cf">function</span>(tibble, variable_info) {</span>
+<span id="cb41-43"><a href="#cb41-43" aria-hidden="true" tabindex="-1"></a>  <span class="co"># takes a tibble and removes rows where the numeric column is not in the range given for the variable</span></span>
+<span id="cb41-44"><a href="#cb41-44" aria-hidden="true" tabindex="-1"></a>  numeric_columns <span class="ot">&lt;-</span> tibble <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="fu">where</span>(is.numeric))</span>
 <span id="cb41-45"><a href="#cb41-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-46"><a href="#cb41-46" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Filter the tibble rows based on the min and max values for this column</span></span>
-<span id="cb41-47"><a href="#cb41-47" aria-hidden="true" tabindex="-1"></a>    tibble <span class="ot">&lt;-</span> tibble <span class="sc">|&gt;</span></span>
-<span id="cb41-48"><a href="#cb41-48" aria-hidden="true" tabindex="-1"></a>      <span class="fu">filter</span>(<span class="sc">!!</span><span class="fu">sym</span>(col) <span class="sc">&gt;=</span> min_val <span class="sc">&amp;</span> <span class="sc">!!</span><span class="fu">sym</span>(col) <span class="sc">&lt;=</span> max_val)</span>
-<span id="cb41-49"><a href="#cb41-49" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-50"><a href="#cb41-50" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> (tibble)</span>
-<span id="cb41-51"><a href="#cb41-51" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb41-52"><a href="#cb41-52" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb41-53"><a href="#cb41-53" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-54"><a href="#cb41-54" aria-hidden="true" tabindex="-1"></a>convert_categorical_to_factor <span class="ot">&lt;-</span> <span class="cf">function</span>(tibble, variable_info) {</span>
-<span id="cb41-55"><a href="#cb41-55" aria-hidden="true" tabindex="-1"></a>  <span class="co"># takes the character columns in the tibble and converts them to the factors in the variable list given</span></span>
-<span id="cb41-56"><a href="#cb41-56" aria-hidden="true" tabindex="-1"></a>  <span class="co"># does some specific treatment of JWAP, JWDP, state, region, division - particular to census data</span></span>
-<span id="cb41-57"><a href="#cb41-57" aria-hidden="true" tabindex="-1"></a>  character_columns <span class="ot">&lt;-</span> tibble <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="fu">where</span>(is.character))</span>
-<span id="cb41-58"><a href="#cb41-58" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (col <span class="cf">in</span> <span class="fu">names</span>(character_columns)) {</span>
-<span id="cb41-59"><a href="#cb41-59" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (col <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"JWAP"</span>, <span class="st">"JWDP"</span>) <span class="sc">|</span> (<span class="sc">!</span>col <span class="sc">%in%</span> <span class="fu">names</span>(variable_info) <span class="sc">&amp;</span> <span class="sc">!</span>col <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"state"</span>, <span class="st">"region"</span>, <span class="st">"division"</span>))) {</span>
-<span id="cb41-60"><a href="#cb41-60" aria-hidden="true" tabindex="-1"></a>      <span class="cf">next</span></span>
-<span id="cb41-61"><a href="#cb41-61" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb41-62"><a href="#cb41-62" aria-hidden="true" tabindex="-1"></a>    col_var <span class="ot">&lt;-</span> col</span>
-<span id="cb41-63"><a href="#cb41-63" aria-hidden="true" tabindex="-1"></a>    col_var <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(col <span class="sc">==</span> <span class="st">"state"</span>, <span class="st">"ST"</span>, col_var)</span>
-<span id="cb41-64"><a href="#cb41-64" aria-hidden="true" tabindex="-1"></a>    col_var <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(col <span class="sc">==</span> <span class="st">"region"</span>, <span class="st">"REGION"</span>, col_var)</span>
-<span id="cb41-65"><a href="#cb41-65" aria-hidden="true" tabindex="-1"></a>    col_var <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(col <span class="sc">==</span> <span class="st">"division"</span>, <span class="st">"DIVISION"</span>, col_var)</span>
-<span id="cb41-66"><a href="#cb41-66" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-67"><a href="#cb41-67" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Get the item values for the current column from variable_info</span></span>
-<span id="cb41-68"><a href="#cb41-68" aria-hidden="true" tabindex="-1"></a>    item_values <span class="ot">&lt;-</span> variable_info[[col_var]]<span class="sc">$</span>values<span class="sc">$</span>item</span>
-<span id="cb41-69"><a href="#cb41-69" aria-hidden="true" tabindex="-1"></a>    <span class="co"># sort the items based on names in reverse order to use labels later</span></span>
-<span id="cb41-70"><a href="#cb41-70" aria-hidden="true" tabindex="-1"></a>    item_values <span class="ot">&lt;-</span> item_values[<span class="fu">order</span>(<span class="fu">names</span>(item_values))]</span>
-<span id="cb41-71"><a href="#cb41-71" aria-hidden="true" tabindex="-1"></a>    <span class="co"># some have 01, 02, etc. but are placed in the lists as 1, 2, etc.</span></span>
-<span id="cb41-72"><a href="#cb41-72" aria-hidden="true" tabindex="-1"></a>    <span class="fu">names</span>(item_values) <span class="ot">&lt;-</span> <span class="fu">as.character</span>(<span class="fu">as.integer</span>(<span class="fu">names</span>(item_values)))</span>
-<span id="cb41-73"><a href="#cb41-73" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Convert the column to a factor based on the item values</span></span>
-<span id="cb41-74"><a href="#cb41-74" aria-hidden="true" tabindex="-1"></a>    tibble <span class="ot">&lt;-</span> tibble <span class="sc">|&gt;</span></span>
-<span id="cb41-75"><a href="#cb41-75" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(<span class="sc">!!</span><span class="fu">sym</span>(col) <span class="sc">:</span><span class="er">=</span> <span class="fu">factor</span>(<span class="sc">!!</span><span class="fu">sym</span>(col), <span class="at">levels=</span><span class="fu">names</span>(item_values), <span class="at">labels=</span>item_values))</span>
-<span id="cb41-76"><a href="#cb41-76" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb41-77"><a href="#cb41-77" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> (tibble)</span>
-<span id="cb41-78"><a href="#cb41-78" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb41-46"><a href="#cb41-46" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (col <span class="cf">in</span> <span class="fu">names</span>(numeric_columns)) {</span>
+<span id="cb41-47"><a href="#cb41-47" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Get the min and max range for the current column from variable_info</span></span>
+<span id="cb41-48"><a href="#cb41-48" aria-hidden="true" tabindex="-1"></a>    min_val <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(variable_info[[col]]<span class="sc">$</span>values<span class="sc">$</span>range<span class="sc">$</span>min)</span>
+<span id="cb41-49"><a href="#cb41-49" aria-hidden="true" tabindex="-1"></a>    max_val <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(variable_info[[col]]<span class="sc">$</span>values<span class="sc">$</span>range<span class="sc">$</span>max)</span>
+<span id="cb41-50"><a href="#cb41-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-51"><a href="#cb41-51" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Filter the tibble rows based on the min and max values for this column</span></span>
+<span id="cb41-52"><a href="#cb41-52" aria-hidden="true" tabindex="-1"></a>    tibble <span class="ot">&lt;-</span> tibble <span class="sc">|&gt;</span></span>
+<span id="cb41-53"><a href="#cb41-53" aria-hidden="true" tabindex="-1"></a>      <span class="fu">filter</span>(<span class="sc">!!</span><span class="fu">sym</span>(col) <span class="sc">&gt;=</span> min_val <span class="sc">&amp;</span> <span class="sc">!!</span><span class="fu">sym</span>(col) <span class="sc">&lt;=</span> max_val)</span>
+<span id="cb41-54"><a href="#cb41-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-55"><a href="#cb41-55" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> (tibble)</span>
+<span id="cb41-56"><a href="#cb41-56" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb41-57"><a href="#cb41-57" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb41-58"><a href="#cb41-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-59"><a href="#cb41-59" aria-hidden="true" tabindex="-1"></a>convert_categorical_to_factor <span class="ot">&lt;-</span> <span class="cf">function</span>(tibble, variable_info) {</span>
+<span id="cb41-60"><a href="#cb41-60" aria-hidden="true" tabindex="-1"></a>  <span class="co"># takes the character columns in the tibble and converts them to the factors in the variable list given</span></span>
+<span id="cb41-61"><a href="#cb41-61" aria-hidden="true" tabindex="-1"></a>  <span class="co"># does some specific treatment of JWAP, JWDP, state, region, division - particular to census data</span></span>
+<span id="cb41-62"><a href="#cb41-62" aria-hidden="true" tabindex="-1"></a>  character_columns <span class="ot">&lt;-</span> tibble <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="fu">where</span>(is.character))</span>
+<span id="cb41-63"><a href="#cb41-63" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (col <span class="cf">in</span> <span class="fu">names</span>(character_columns)) {</span>
+<span id="cb41-64"><a href="#cb41-64" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="sc">!</span>col <span class="sc">%in%</span> <span class="fu">names</span>(variable_info) <span class="sc">&amp;</span> <span class="sc">!</span>col <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"state"</span>, <span class="st">"region"</span>, <span class="st">"division"</span>)) {</span>
+<span id="cb41-65"><a href="#cb41-65" aria-hidden="true" tabindex="-1"></a>      <span class="cf">next</span></span>
+<span id="cb41-66"><a href="#cb41-66" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb41-67"><a href="#cb41-67" aria-hidden="true" tabindex="-1"></a>    col_var <span class="ot">&lt;-</span> col</span>
+<span id="cb41-68"><a href="#cb41-68" aria-hidden="true" tabindex="-1"></a>    col_var <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(col <span class="sc">==</span> <span class="st">"state"</span>, <span class="st">"ST"</span>, col_var)</span>
+<span id="cb41-69"><a href="#cb41-69" aria-hidden="true" tabindex="-1"></a>    col_var <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(col <span class="sc">==</span> <span class="st">"region"</span>, <span class="st">"REGION"</span>, col_var)</span>
+<span id="cb41-70"><a href="#cb41-70" aria-hidden="true" tabindex="-1"></a>    col_var <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(col <span class="sc">==</span> <span class="st">"division"</span>, <span class="st">"DIVISION"</span>, col_var)</span>
+<span id="cb41-71"><a href="#cb41-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-72"><a href="#cb41-72" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Get the item values for the current column from variable_info</span></span>
+<span id="cb41-73"><a href="#cb41-73" aria-hidden="true" tabindex="-1"></a>    item_values <span class="ot">&lt;-</span> variable_info[[col_var]]<span class="sc">$</span>values<span class="sc">$</span>item</span>
+<span id="cb41-74"><a href="#cb41-74" aria-hidden="true" tabindex="-1"></a>    <span class="co"># sort the items based on names in reverse order to use labels later</span></span>
+<span id="cb41-75"><a href="#cb41-75" aria-hidden="true" tabindex="-1"></a>    item_values <span class="ot">&lt;-</span> item_values[<span class="fu">order</span>(<span class="fu">names</span>(item_values))]</span>
+<span id="cb41-76"><a href="#cb41-76" aria-hidden="true" tabindex="-1"></a>    <span class="co"># some have 01, 02, etc. but are placed in the lists as 1, 2, etc.</span></span>
+<span id="cb41-77"><a href="#cb41-77" aria-hidden="true" tabindex="-1"></a>    <span class="fu">names</span>(item_values) <span class="ot">&lt;-</span> <span class="fu">as.character</span>(<span class="fu">as.integer</span>(<span class="fu">names</span>(item_values)))</span>
+<span id="cb41-78"><a href="#cb41-78" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Convert the column to a factor based on the item values</span></span>
+<span id="cb41-79"><a href="#cb41-79" aria-hidden="true" tabindex="-1"></a>    tibble <span class="ot">&lt;-</span> tibble <span class="sc">|&gt;</span></span>
+<span id="cb41-80"><a href="#cb41-80" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(<span class="sc">!!</span><span class="fu">sym</span>(col) <span class="sc">:</span><span class="er">=</span> <span class="fu">factor</span>(<span class="sc">!!</span><span class="fu">sym</span>(col), <span class="at">levels=</span><span class="fu">names</span>(item_values), <span class="at">labels=</span>item_values))</span>
+<span id="cb41-81"><a href="#cb41-81" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb41-82"><a href="#cb41-82" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> (tibble)</span>
+<span id="cb41-83"><a href="#cb41-83" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="test-and-example-output-of-post-processing." class="level4">
@@ -817,67 +822,73 @@ $both_GRPIP
 <span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>  <span class="co"># lot of duplicate rows - get the unique ones</span></span>
 <span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> data <span class="sc">|&gt;</span> <span class="fu">distinct</span>(<span class="at">.keep_all =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a>  var_filtered <span class="ot">&lt;-</span> <span class="fu">get_variable_list</span>(<span class="st">"2022"</span>, <span class="fu">c</span>(<span class="st">"JWAP"</span>, <span class="st">"JWDP"</span>))</span>
-<span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>JWAP_fixed <span class="ot">&lt;-</span> <span class="fu">fix_time_interval_categories</span>(var_filtered<span class="sc">$</span>JWAP<span class="sc">$</span>values<span class="sc">$</span>item, data<span class="sc">$</span>JWAP)</span>
-<span id="cb42-13"><a href="#cb42-13" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>JWDP_fixed <span class="ot">&lt;-</span> <span class="fu">fix_time_interval_categories</span>(var_filtered<span class="sc">$</span>JWDP<span class="sc">$</span>values<span class="sc">$</span>item, data<span class="sc">$</span>JWDP)</span>
-<span id="cb42-14"><a href="#cb42-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb42-15"><a href="#cb42-15" aria-hidden="true" tabindex="-1"></a>  <span class="co"># order the var_filtered items columns for better viewing purposes</span></span>
-<span id="cb42-16"><a href="#cb42-16" aria-hidden="true" tabindex="-1"></a>  var_filtered<span class="sc">$</span>JWAP <span class="ot">&lt;-</span> var_filtered<span class="sc">$</span>JWAP<span class="sc">$</span>values<span class="sc">$</span>item[<span class="fu">order</span>(<span class="fu">names</span>(var_filtered<span class="sc">$</span>JWAP<span class="sc">$</span>values<span class="sc">$</span>item))]</span>
-<span id="cb42-17"><a href="#cb42-17" aria-hidden="true" tabindex="-1"></a>  var_filtered<span class="sc">$</span>JWDP <span class="ot">&lt;-</span> var_filtered<span class="sc">$</span>JWDP<span class="sc">$</span>values<span class="sc">$</span>item[<span class="fu">order</span>(<span class="fu">names</span>(var_filtered<span class="sc">$</span>JWDP<span class="sc">$</span>values<span class="sc">$</span>item))]</span>
+<span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a>  fixed_JWAP <span class="ot">&lt;-</span> <span class="fu">fix_time_interval_categories</span>(var_filtered<span class="sc">$</span>JWAP<span class="sc">$</span>values<span class="sc">$</span>item, data<span class="sc">$</span>JWAP)</span>
+<span id="cb42-13"><a href="#cb42-13" aria-hidden="true" tabindex="-1"></a>  fixed_JWDP <span class="ot">&lt;-</span> <span class="fu">fix_time_interval_categories</span>(var_filtered<span class="sc">$</span>JWDP<span class="sc">$</span>values<span class="sc">$</span>item, data<span class="sc">$</span>JWDP)</span>
+<span id="cb42-14"><a href="#cb42-14" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>JWAP_fixed <span class="ot">&lt;-</span> fixed_JWAP<span class="sc">$</span>value_list</span>
+<span id="cb42-15"><a href="#cb42-15" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>JWDP_fixed <span class="ot">&lt;-</span> fixed_JWDP<span class="sc">$</span>value_list</span>
+<span id="cb42-16"><a href="#cb42-16" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>JWAP_midpoints <span class="ot">&lt;-</span> fixed_JWAP<span class="sc">$</span>midpoints</span>
+<span id="cb42-17"><a href="#cb42-17" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>JWDP_midpoints <span class="ot">&lt;-</span> fixed_JWDP<span class="sc">$</span>midpoints</span>
 <span id="cb42-18"><a href="#cb42-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb42-19"><a href="#cb42-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> (<span class="fu">list</span>(<span class="at">data=</span>data, <span class="at">var_info=</span>var_filtered))</span>
-<span id="cb42-20"><a href="#cb42-20" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb42-21"><a href="#cb42-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb42-22"><a href="#cb42-22" aria-hidden="true" tabindex="-1"></a>test_2_pp <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
-<span id="cb42-23"><a href="#cb42-23" aria-hidden="true" tabindex="-1"></a>  <span class="co"># test converting columns to numeric, given a list of numeric columns and a list of columns to exclude</span></span>
-<span id="cb42-24"><a href="#cb42-24" aria-hidden="true" tabindex="-1"></a>  <span class="co"># str of data will have int where a character was</span></span>
-<span id="cb42-25"><a href="#cb42-25" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> <span class="fu">census_tibble</span>(<span class="fu">census_url</span>(<span class="at">year=</span><span class="st">"2022"</span>, <span class="at">get_vals=</span><span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"SEX"</span>, <span class="st">"JWAP"</span>), <span class="at">for_val=</span><span class="st">"state:10"</span>))</span>
-<span id="cb42-26"><a href="#cb42-26" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> <span class="fu">convert_columns_to_numeric</span>(data, <span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"JWAP"</span>), <span class="st">"JWAP"</span>)</span>
-<span id="cb42-27"><a href="#cb42-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> (data)</span>
-<span id="cb42-28"><a href="#cb42-28" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb42-29"><a href="#cb42-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb42-30"><a href="#cb42-30" aria-hidden="true" tabindex="-1"></a>test_3_pp <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
-<span id="cb42-31"><a href="#cb42-31" aria-hidden="true" tabindex="-1"></a>  <span class="co"># test the removal of categorical items in numeric columns (removes the 0)</span></span>
-<span id="cb42-32"><a href="#cb42-32" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> <span class="fu">census_tibble</span>(<span class="fu">census_url</span>(<span class="at">year=</span><span class="st">"2022"</span>, <span class="at">get_vals=</span><span class="st">"AGEP"</span>, <span class="at">for_val=</span><span class="st">"state:10"</span>))</span>
-<span id="cb42-33"><a href="#cb42-33" aria-hidden="true" tabindex="-1"></a>  var_filtered <span class="ot">&lt;-</span> <span class="fu">get_variable_list</span>(<span class="st">"2022"</span>, <span class="st">"AGEP"</span>)</span>
-<span id="cb42-34"><a href="#cb42-34" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> data <span class="sc">|&gt;</span></span>
-<span id="cb42-35"><a href="#cb42-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">distinct</span>(<span class="at">.keep_all =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
-<span id="cb42-36"><a href="#cb42-36" aria-hidden="true" tabindex="-1"></a>    <span class="fu">convert_columns_to_numeric</span>(<span class="st">"AGEP"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb42-37"><a href="#cb42-37" aria-hidden="true" tabindex="-1"></a>    <span class="fu">remove_categorical_row_items_in_numeric</span>(var_filtered)</span>
-<span id="cb42-38"><a href="#cb42-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> (<span class="fu">list</span>(<span class="at">data=</span>data, <span class="at">var_info=</span>var_filtered))</span>
-<span id="cb42-39"><a href="#cb42-39" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb42-40"><a href="#cb42-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb42-41"><a href="#cb42-41" aria-hidden="true" tabindex="-1"></a>test_4_pp <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
-<span id="cb42-42"><a href="#cb42-42" aria-hidden="true" tabindex="-1"></a>  <span class="co"># test the replacement of the categorical items with the factor labels</span></span>
-<span id="cb42-43"><a href="#cb42-43" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> <span class="fu">census_tibble</span>(<span class="fu">census_url</span>(<span class="at">year=</span><span class="st">"2022"</span>, <span class="at">get_vals=</span><span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"SEX"</span>, <span class="st">"HISPEED"</span>), <span class="at">for_val=</span><span class="st">"state:10"</span>))</span>
-<span id="cb42-44"><a href="#cb42-44" aria-hidden="true" tabindex="-1"></a>  var_filtered <span class="ot">&lt;-</span> <span class="fu">get_variable_list</span>(<span class="st">"2022"</span>, <span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"SEX"</span>, <span class="st">"HISPEED"</span>, <span class="st">"ST"</span>))</span>
-<span id="cb42-45"><a href="#cb42-45" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>SEX_saved <span class="ot">&lt;-</span> data<span class="sc">$</span>SEX</span>
-<span id="cb42-46"><a href="#cb42-46" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>HISPEED_saved <span class="ot">&lt;-</span> data<span class="sc">$</span>HISPEED</span>
-<span id="cb42-47"><a href="#cb42-47" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>ST_saved <span class="ot">&lt;-</span> data<span class="sc">$</span>state</span>
-<span id="cb42-48"><a href="#cb42-48" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> data <span class="sc">|&gt;</span></span>
-<span id="cb42-49"><a href="#cb42-49" aria-hidden="true" tabindex="-1"></a>    <span class="fu">distinct</span>(<span class="at">.keep_all =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
-<span id="cb42-50"><a href="#cb42-50" aria-hidden="true" tabindex="-1"></a>    <span class="fu">convert_columns_to_numeric</span>(<span class="st">"AGEP"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb42-51"><a href="#cb42-51" aria-hidden="true" tabindex="-1"></a>    <span class="fu">remove_categorical_row_items_in_numeric</span>(var_filtered) <span class="sc">|&gt;</span></span>
-<span id="cb42-52"><a href="#cb42-52" aria-hidden="true" tabindex="-1"></a>    <span class="fu">convert_categorical_to_factor</span>(var_filtered)</span>
-<span id="cb42-53"><a href="#cb42-53" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb42-54"><a href="#cb42-54" aria-hidden="true" tabindex="-1"></a>  var_filtered<span class="sc">$</span>AGEP <span class="ot">&lt;-</span> var_filtered<span class="sc">$</span>AGEP<span class="sc">$</span>values</span>
-<span id="cb42-55"><a href="#cb42-55" aria-hidden="true" tabindex="-1"></a>  var_filtered<span class="sc">$</span>SEX <span class="ot">&lt;-</span> var_filtered<span class="sc">$</span>SEX<span class="sc">$</span>values<span class="sc">$</span>item[<span class="fu">order</span>(<span class="fu">names</span>(var_filtered<span class="sc">$</span>SEX<span class="sc">$</span>values<span class="sc">$</span>item))]</span>
-<span id="cb42-56"><a href="#cb42-56" aria-hidden="true" tabindex="-1"></a>  var_filtered<span class="sc">$</span>HISPEED <span class="ot">&lt;-</span> var_filtered<span class="sc">$</span>HISPEED<span class="sc">$</span>values<span class="sc">$</span>item[<span class="fu">order</span>(<span class="fu">names</span>(var_filtered<span class="sc">$</span>HISPEED<span class="sc">$</span>values<span class="sc">$</span>item))]</span>
-<span id="cb42-57"><a href="#cb42-57" aria-hidden="true" tabindex="-1"></a>  var_filtered<span class="sc">$</span>ST <span class="ot">&lt;-</span> var_filtered<span class="sc">$</span>ST<span class="sc">$</span>values<span class="sc">$</span>item[<span class="fu">order</span>(<span class="fu">names</span>(var_filtered<span class="sc">$</span>ST<span class="sc">$</span>values<span class="sc">$</span>item))]</span>
-<span id="cb42-58"><a href="#cb42-58" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb42-59"><a href="#cb42-59" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">data=</span>data, <span class="at">var_info=</span>var_filtered))</span>
-<span id="cb42-60"><a href="#cb42-60" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb42-19"><a href="#cb42-19" aria-hidden="true" tabindex="-1"></a>  <span class="co"># order the var_filtered items columns for better viewing purposes</span></span>
+<span id="cb42-20"><a href="#cb42-20" aria-hidden="true" tabindex="-1"></a>  var_filtered<span class="sc">$</span>JWAP <span class="ot">&lt;-</span> var_filtered<span class="sc">$</span>JWAP<span class="sc">$</span>values<span class="sc">$</span>item[<span class="fu">order</span>(<span class="fu">names</span>(var_filtered<span class="sc">$</span>JWAP<span class="sc">$</span>values<span class="sc">$</span>item))]</span>
+<span id="cb42-21"><a href="#cb42-21" aria-hidden="true" tabindex="-1"></a>  var_filtered<span class="sc">$</span>JWDP <span class="ot">&lt;-</span> var_filtered<span class="sc">$</span>JWDP<span class="sc">$</span>values<span class="sc">$</span>item[<span class="fu">order</span>(<span class="fu">names</span>(var_filtered<span class="sc">$</span>JWDP<span class="sc">$</span>values<span class="sc">$</span>item))]</span>
+<span id="cb42-22"><a href="#cb42-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-23"><a href="#cb42-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> (<span class="fu">list</span>(<span class="at">data=</span>data, <span class="at">var_info=</span>var_filtered))</span>
+<span id="cb42-24"><a href="#cb42-24" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb42-25"><a href="#cb42-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-26"><a href="#cb42-26" aria-hidden="true" tabindex="-1"></a>test_2_pp <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb42-27"><a href="#cb42-27" aria-hidden="true" tabindex="-1"></a>  <span class="co"># test converting columns to numeric, given a list of numeric columns and a list of columns to exclude</span></span>
+<span id="cb42-28"><a href="#cb42-28" aria-hidden="true" tabindex="-1"></a>  <span class="co"># str of data will have int where a character was</span></span>
+<span id="cb42-29"><a href="#cb42-29" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> <span class="fu">census_tibble</span>(<span class="fu">census_url</span>(<span class="at">year=</span><span class="st">"2022"</span>, <span class="at">get_vals=</span><span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"SEX"</span>, <span class="st">"JWAP"</span>), <span class="at">for_val=</span><span class="st">"state:10"</span>))</span>
+<span id="cb42-30"><a href="#cb42-30" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> <span class="fu">convert_columns_to_numeric</span>(data, <span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"JWAP"</span>))</span>
+<span id="cb42-31"><a href="#cb42-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> (data)</span>
+<span id="cb42-32"><a href="#cb42-32" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb42-33"><a href="#cb42-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-34"><a href="#cb42-34" aria-hidden="true" tabindex="-1"></a>test_3_pp <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb42-35"><a href="#cb42-35" aria-hidden="true" tabindex="-1"></a>  <span class="co"># test the removal of categorical items in numeric columns (removes the 0)</span></span>
+<span id="cb42-36"><a href="#cb42-36" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> <span class="fu">census_tibble</span>(<span class="fu">census_url</span>(<span class="at">year=</span><span class="st">"2022"</span>, <span class="at">get_vals=</span><span class="st">"AGEP"</span>, <span class="at">for_val=</span><span class="st">"state:10"</span>))</span>
+<span id="cb42-37"><a href="#cb42-37" aria-hidden="true" tabindex="-1"></a>  var_filtered <span class="ot">&lt;-</span> <span class="fu">get_variable_list</span>(<span class="st">"2022"</span>, <span class="st">"AGEP"</span>)</span>
+<span id="cb42-38"><a href="#cb42-38" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> data <span class="sc">|&gt;</span></span>
+<span id="cb42-39"><a href="#cb42-39" aria-hidden="true" tabindex="-1"></a>    <span class="fu">distinct</span>(<span class="at">.keep_all =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb42-40"><a href="#cb42-40" aria-hidden="true" tabindex="-1"></a>    <span class="fu">convert_columns_to_numeric</span>(<span class="st">"AGEP"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb42-41"><a href="#cb42-41" aria-hidden="true" tabindex="-1"></a>    <span class="fu">remove_categorical_row_items_in_numeric</span>(var_filtered)</span>
+<span id="cb42-42"><a href="#cb42-42" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> (<span class="fu">list</span>(<span class="at">data=</span>data, <span class="at">var_info=</span>var_filtered))</span>
+<span id="cb42-43"><a href="#cb42-43" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb42-44"><a href="#cb42-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-45"><a href="#cb42-45" aria-hidden="true" tabindex="-1"></a>test_4_pp <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb42-46"><a href="#cb42-46" aria-hidden="true" tabindex="-1"></a>  <span class="co"># test the replacement of the categorical items with the factor labels</span></span>
+<span id="cb42-47"><a href="#cb42-47" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> <span class="fu">census_tibble</span>(<span class="fu">census_url</span>(<span class="at">year=</span><span class="st">"2022"</span>, <span class="at">get_vals=</span><span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"SEX"</span>, <span class="st">"HISPEED"</span>), <span class="at">for_val=</span><span class="st">"state:10"</span>))</span>
+<span id="cb42-48"><a href="#cb42-48" aria-hidden="true" tabindex="-1"></a>  var_filtered <span class="ot">&lt;-</span> <span class="fu">get_variable_list</span>(<span class="st">"2022"</span>, <span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"SEX"</span>, <span class="st">"HISPEED"</span>, <span class="st">"ST"</span>))</span>
+<span id="cb42-49"><a href="#cb42-49" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>SEX_saved <span class="ot">&lt;-</span> data<span class="sc">$</span>SEX</span>
+<span id="cb42-50"><a href="#cb42-50" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>HISPEED_saved <span class="ot">&lt;-</span> data<span class="sc">$</span>HISPEED</span>
+<span id="cb42-51"><a href="#cb42-51" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>ST_saved <span class="ot">&lt;-</span> data<span class="sc">$</span>state</span>
+<span id="cb42-52"><a href="#cb42-52" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> data <span class="sc">|&gt;</span></span>
+<span id="cb42-53"><a href="#cb42-53" aria-hidden="true" tabindex="-1"></a>    <span class="fu">distinct</span>(<span class="at">.keep_all =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb42-54"><a href="#cb42-54" aria-hidden="true" tabindex="-1"></a>    <span class="fu">convert_columns_to_numeric</span>(<span class="st">"AGEP"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb42-55"><a href="#cb42-55" aria-hidden="true" tabindex="-1"></a>    <span class="fu">remove_categorical_row_items_in_numeric</span>(var_filtered) <span class="sc">|&gt;</span></span>
+<span id="cb42-56"><a href="#cb42-56" aria-hidden="true" tabindex="-1"></a>    <span class="fu">convert_categorical_to_factor</span>(var_filtered)</span>
+<span id="cb42-57"><a href="#cb42-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-58"><a href="#cb42-58" aria-hidden="true" tabindex="-1"></a>  var_filtered<span class="sc">$</span>AGEP <span class="ot">&lt;-</span> var_filtered<span class="sc">$</span>AGEP<span class="sc">$</span>values</span>
+<span id="cb42-59"><a href="#cb42-59" aria-hidden="true" tabindex="-1"></a>  var_filtered<span class="sc">$</span>SEX <span class="ot">&lt;-</span> var_filtered<span class="sc">$</span>SEX<span class="sc">$</span>values<span class="sc">$</span>item[<span class="fu">order</span>(<span class="fu">names</span>(var_filtered<span class="sc">$</span>SEX<span class="sc">$</span>values<span class="sc">$</span>item))]</span>
+<span id="cb42-60"><a href="#cb42-60" aria-hidden="true" tabindex="-1"></a>  var_filtered<span class="sc">$</span>HISPEED <span class="ot">&lt;-</span> var_filtered<span class="sc">$</span>HISPEED<span class="sc">$</span>values<span class="sc">$</span>item[<span class="fu">order</span>(<span class="fu">names</span>(var_filtered<span class="sc">$</span>HISPEED<span class="sc">$</span>values<span class="sc">$</span>item))]</span>
+<span id="cb42-61"><a href="#cb42-61" aria-hidden="true" tabindex="-1"></a>  var_filtered<span class="sc">$</span>ST <span class="ot">&lt;-</span> var_filtered<span class="sc">$</span>ST<span class="sc">$</span>values<span class="sc">$</span>item[<span class="fu">order</span>(<span class="fu">names</span>(var_filtered<span class="sc">$</span>ST<span class="sc">$</span>values<span class="sc">$</span>item))]</span>
+<span id="cb42-62"><a href="#cb42-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-63"><a href="#cb42-63" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">data=</span>data, <span class="at">var_info=</span>var_filtered))</span>
+<span id="cb42-64"><a href="#cb42-64" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Show the time conversion in action.</span></span>
 <span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>data_1_pp <span class="ot">&lt;-</span> <span class="fu">test_1_pp</span>()</span>
 <span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(data_1_pp<span class="sc">$</span>data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>tibble [771 × 5] (S3: tbl_df/tbl/data.frame)
- $ JWAP      : chr [1:771] "0" "91" "106" "260" ...
- $ JWDP      : chr [1:771] "0" "49" "55" "140" ...
- $ state     : chr [1:771] "10" "10" "10" "10" ...
- $ JWAP_fixed: chr [1:771] "NA" "07:47:00" "09:02:00" "21:52:00" ...
- $ JWDP_fixed: chr [1:771] "NA" "07:32:00" "08:02:00" "21:34:30" ...</code></pre>
+<pre><code>tibble [771 × 7] (S3: tbl_df/tbl/data.frame)
+ $ JWAP          : chr [1:771] "0" "74" "76" "109" ...
+ $ JWDP          : chr [1:771] "0" "31" "31" "67" ...
+ $ state         : chr [1:771] "10" "10" "10" "10" ...
+ $ JWAP_fixed    : chr [1:771] "NA" "6.36666666666667" "6.53333333333333" "9.28333333333333" ...
+ $ JWDP_fixed    : chr [1:771] "NA" "6.03333333333333" "6.03333333333333" "9.03333333333333" ...
+ $ JWAP_midpoints: chr [1:771] "NA" "06:22:00" "06:32:00" "09:17:00" ...
+ $ JWDP_midpoints: chr [1:771] "NA" "06:02:00" "06:02:00" "09:02:00" ...</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Show the sorted time list to compare.</span></span>
 <span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(data_1_pp<span class="sc">$</span>var_info, <span class="at">max.level=</span><span class="dv">2</span>, <span class="at">list.len=</span><span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -903,9 +914,9 @@ $both_GRPIP
 <span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(data_2_pp, <span class="at">max.level=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>tibble [9,641 × 4] (S3: tbl_df/tbl/data.frame)
- $ AGEP : int [1:9641] 84 39 19 77 18 32 50 23 20 18 ...
+ $ AGEP : num [1:9641] 84 39 19 77 18 32 50 23 20 18 ...
  $ SEX  : chr [1:9641] "2" "2" "2" "2" ...
- $ JWAP : chr [1:9641] "0" "0" "0" "0" ...
+ $ JWAP : num [1:9641] 0 0 0 0 0 0 0 74 0 0 ...
  $ state: chr [1:9641] "10" "10" "10" "10" ...</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Show that 0 is not in the table, because it fell out of the min-max range and was in the item section as</span></span>
@@ -923,7 +934,7 @@ $both_GRPIP
 <span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(data_4_pp<span class="sc">$</span>data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>tibble [513 × 7] (S3: tbl_df/tbl/data.frame)
- $ AGEP         : int [1:513] 84 39 19 77 18 32 50 23 20 93 ...
+ $ AGEP         : num [1:513] 84 39 19 77 18 32 50 23 20 93 ...
  $ SEX          : Factor w/ 2 levels "Male","Female": 2 2 2 2 2 1 1 1 2 2 ...
  $ HISPEED      : Factor w/ 3 levels "N/A (GQ/vacant/no paid access to the internet)",..: 1 1 1 1 1 1 1 1 1 1 ...
  $ state        : Factor w/ 52 levels "Alabama/AL","Alaska/AK",..: 8 8 8 8 8 8 8 8 8 8 ...
@@ -1073,33 +1084,31 @@ $both_GRPIP
 <span id="cb55-106"><a href="#cb55-106" aria-hidden="true" tabindex="-1"></a>  parsed_tibble <span class="ot">&lt;-</span> <span class="fu">census_tibble</span>(URL)</span>
 <span id="cb55-107"><a href="#cb55-107" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb55-108"><a href="#cb55-108" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="st">"JWAP"</span> <span class="sc">%in%</span> <span class="fu">names</span>(parsed_tibble)) {</span>
-<span id="cb55-109"><a href="#cb55-109" aria-hidden="true" tabindex="-1"></a>    parsed_tibble<span class="sc">$</span>JWAP <span class="ot">&lt;-</span> <span class="fu">fix_time_interval_categories</span>(filtered_var_info<span class="sc">$</span>JWAP<span class="sc">$</span>values<span class="sc">$</span>item, parsed_tibble<span class="sc">$</span>JWAP)</span>
+<span id="cb55-109"><a href="#cb55-109" aria-hidden="true" tabindex="-1"></a>    parsed_tibble<span class="sc">$</span>JWAP <span class="ot">&lt;-</span> <span class="fu">fix_time_interval_categories</span>(filtered_var_info<span class="sc">$</span>JWAP<span class="sc">$</span>values<span class="sc">$</span>item, parsed_tibble<span class="sc">$</span>JWAP)<span class="sc">$</span>value_list</span>
 <span id="cb55-110"><a href="#cb55-110" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb55-111"><a href="#cb55-111" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="st">"JWDP"</span> <span class="sc">%in%</span> <span class="fu">names</span>(parsed_tibble)) {</span>
-<span id="cb55-112"><a href="#cb55-112" aria-hidden="true" tabindex="-1"></a>    parsed_tibble<span class="sc">$</span>JWDP <span class="ot">&lt;-</span> <span class="fu">fix_time_interval_categories</span>(filtered_var_info<span class="sc">$</span>JWDP<span class="sc">$</span>values<span class="sc">$</span>item, parsed_tibble<span class="sc">$</span>JWDP)</span>
+<span id="cb55-112"><a href="#cb55-112" aria-hidden="true" tabindex="-1"></a>    parsed_tibble<span class="sc">$</span>JWDP <span class="ot">&lt;-</span> <span class="fu">fix_time_interval_categories</span>(filtered_var_info<span class="sc">$</span>JWDP<span class="sc">$</span>values<span class="sc">$</span>item, parsed_tibble<span class="sc">$</span>JWDP)<span class="sc">$</span>value_list</span>
 <span id="cb55-113"><a href="#cb55-113" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb55-114"><a href="#cb55-114" aria-hidden="true" tabindex="-1"></a>  <span class="co"># print(glue("Numeric item list, gets converted to int - [{glue_collapse(numeric_item_list, sep=', ')}]"))</span></span>
 <span id="cb55-115"><a href="#cb55-115" aria-hidden="true" tabindex="-1"></a>  <span class="co"># print(glue("List without JWAP and JWDP - [{glue_collapse(numeric_item_list[!numeric_item_list %in% c('JWDP', 'JWAP')], sep=', ')}]"))</span></span>
 <span id="cb55-116"><a href="#cb55-116" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb55-117"><a href="#cb55-117" aria-hidden="true" tabindex="-1"></a>  parsed_tibble <span class="ot">&lt;-</span> parsed_tibble <span class="sc">|&gt;</span></span>
-<span id="cb55-118"><a href="#cb55-118" aria-hidden="true" tabindex="-1"></a>    <span class="fu">convert_columns_to_numeric</span>(numeric_item_list, <span class="at">exclude_list=</span><span class="fu">c</span>(<span class="st">"JWDP"</span>, <span class="st">"JWAP"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb55-118"><a href="#cb55-118" aria-hidden="true" tabindex="-1"></a>    <span class="fu">convert_columns_to_numeric</span>(numeric_item_list) <span class="sc">|&gt;</span></span>
 <span id="cb55-119"><a href="#cb55-119" aria-hidden="true" tabindex="-1"></a>    <span class="fu">remove_categorical_row_items_in_numeric</span>(filtered_var_info) <span class="sc">|&gt;</span></span>
 <span id="cb55-120"><a href="#cb55-120" aria-hidden="true" tabindex="-1"></a>    <span class="fu">convert_categorical_to_factor</span>(filtered_var_info)</span>
 <span id="cb55-121"><a href="#cb55-121" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb55-122"><a href="#cb55-122" aria-hidden="true" tabindex="-1"></a>  <span class="co"># </span><span class="al">TODO</span><span class="co"> time is not split into a numeric value yet</span></span>
-<span id="cb55-123"><a href="#cb55-123" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb55-124"><a href="#cb55-124" aria-hidden="true" tabindex="-1"></a>  <span class="co"># add census class to the parsed tibble</span></span>
-<span id="cb55-125"><a href="#cb55-125" aria-hidden="true" tabindex="-1"></a>  <span class="fu">class</span>(parsed_tibble) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"census"</span>, <span class="fu">class</span>(parsed_tibble))</span>
-<span id="cb55-126"><a href="#cb55-126" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">parsed=</span>parsed_tibble, <span class="at">var_info=</span>filtered_var_info, <span class="at">URL=</span>URL))</span>
-<span id="cb55-127"><a href="#cb55-127" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb55-128"><a href="#cb55-128" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb55-129"><a href="#cb55-129" aria-hidden="true" tabindex="-1"></a>get_data_years <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">years=</span><span class="st">"2022"</span>, <span class="at">variables=</span><span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"PWGTP"</span>, <span class="st">"SEX"</span>), <span class="at">geography_level=</span><span class="st">"state:10"</span>) {</span>
-<span id="cb55-130"><a href="#cb55-130" aria-hidden="true" tabindex="-1"></a>  <span class="co"># get multiple years of data, removing 2020 if given - year is not valid for some reason</span></span>
-<span id="cb55-131"><a href="#cb55-131" aria-hidden="true" tabindex="-1"></a>  years <span class="ot">&lt;-</span> years[years <span class="sc">!=</span> <span class="dv">2020</span>]</span>
-<span id="cb55-132"><a href="#cb55-132" aria-hidden="true" tabindex="-1"></a>  results <span class="ot">&lt;-</span> <span class="fu">lapply</span>(years, <span class="cf">function</span>(year) <span class="fu">get_data</span>(<span class="at">year=</span>year, <span class="at">variables=</span>variables, <span class="at">geography_level=</span>geography_level))</span>
-<span id="cb55-133"><a href="#cb55-133" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(results) <span class="ot">&lt;-</span> years</span>
-<span id="cb55-134"><a href="#cb55-134" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(results)</span>
-<span id="cb55-135"><a href="#cb55-135" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb55-122"><a href="#cb55-122" aria-hidden="true" tabindex="-1"></a>  <span class="co"># add census class to the parsed tibble</span></span>
+<span id="cb55-123"><a href="#cb55-123" aria-hidden="true" tabindex="-1"></a>  <span class="fu">class</span>(parsed_tibble) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"census"</span>, <span class="fu">class</span>(parsed_tibble))</span>
+<span id="cb55-124"><a href="#cb55-124" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">parsed=</span>parsed_tibble, <span class="at">var_info=</span>filtered_var_info, <span class="at">URL=</span>URL))</span>
+<span id="cb55-125"><a href="#cb55-125" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb55-126"><a href="#cb55-126" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-127"><a href="#cb55-127" aria-hidden="true" tabindex="-1"></a>get_data_years <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">years=</span><span class="st">"2022"</span>, <span class="at">variables=</span><span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"PWGTP"</span>, <span class="st">"SEX"</span>), <span class="at">geography_level=</span><span class="st">"state:10"</span>) {</span>
+<span id="cb55-128"><a href="#cb55-128" aria-hidden="true" tabindex="-1"></a>  <span class="co"># get multiple years of data, removing 2020 if given - year is not valid for some reason</span></span>
+<span id="cb55-129"><a href="#cb55-129" aria-hidden="true" tabindex="-1"></a>  years <span class="ot">&lt;-</span> years[years <span class="sc">!=</span> <span class="dv">2020</span>]</span>
+<span id="cb55-130"><a href="#cb55-130" aria-hidden="true" tabindex="-1"></a>  results <span class="ot">&lt;-</span> <span class="fu">lapply</span>(years, <span class="cf">function</span>(year) <span class="fu">get_data</span>(<span class="at">year=</span>year, <span class="at">variables=</span>variables, <span class="at">geography_level=</span>geography_level))</span>
+<span id="cb55-131"><a href="#cb55-131" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(results) <span class="ot">&lt;-</span> years</span>
+<span id="cb55-132"><a href="#cb55-132" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(results)</span>
+<span id="cb55-133"><a href="#cb55-133" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="load-the-tests-that-display-the-usage-of-the-main-get_data-function-and-the-list-version-multiple-years." class="level4">
@@ -1131,32 +1140,34 @@ $both_GRPIP
 <span id="cb56-24"><a href="#cb56-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">geography_level =</span> geography_level</span>
 <span id="cb56-25"><a href="#cb56-25" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb56-26"><a href="#cb56-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> (return_data)</span>
-<span id="cb56-27"><a href="#cb56-27" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb56-28"><a href="#cb56-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb56-29"><a href="#cb56-29" aria-hidden="true" tabindex="-1"></a><span class="co"># data_1_m &lt;- test_1_m()</span></span>
-<span id="cb56-30"><a href="#cb56-30" aria-hidden="true" tabindex="-1"></a><span class="co"># data_1_m$URL</span></span>
-<span id="cb56-31"><a href="#cb56-31" aria-hidden="true" tabindex="-1"></a><span class="co"># str(data_1_m$parsed)</span></span>
-<span id="cb56-32"><a href="#cb56-32" aria-hidden="true" tabindex="-1"></a><span class="co"># data_2_m &lt;- test_2_m()</span></span>
-<span id="cb56-33"><a href="#cb56-33" aria-hidden="true" tabindex="-1"></a><span class="co"># str(data_2_m, max.level = 2)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb56-27"><a href="#cb56-27" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Call the main get_data function with all the valid values and the default state:10.</span></span>
-<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>data_1_m <span class="ot">&lt;-</span> <span class="fu">test_1_m</span>()</span>
-<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Returned function gives the URL, the filtered variable list with everything provided, and the tibble.</span></span>
-<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>data_1_m<span class="sc">$</span>URL</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>data_1_m <span class="ot">&lt;-</span> <span class="fu">test_1_m</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: There were 2 warnings in `mutate()`.
+The first warning was:
+ℹ In argument: `across(...)`.
+Caused by warning:
+! NAs introduced by coercion
+ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Returned function gives the URL, the filtered variable list with everything provided, and the tibble.</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>data_1_m<span class="sc">$</span>URL</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>https://api.census.gov/data/2022/acs/acs1/pums?get=AGEP,PWGTP,GASP,GRPIP,JWAP,JWDP,JWMNP,SEX,FER,HHL,HISPEED,JWTRNS,SCH,SCHL&amp;for=state:10</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(data_1_m<span class="sc">$</span>parsed)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(data_1_m<span class="sc">$</span>parsed)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>census [9,569 × 15] (S3: census/tbl_df/tbl/data.frame)
- $ AGEP   : int [1:9569] 84 39 19 77 18 32 50 23 20 18 ...
- $ PWGTP  : int [1:9569] 76 20 92 19 32 80 132 19 47 201 ...
- $ GASP   : int [1:9569] 3 3 3 3 3 3 3 3 3 3 ...
- $ GRPIP  : int [1:9569] 0 0 0 0 0 0 0 0 0 0 ...
- $ JWAP   : chr [1:9569] "NA" "NA" "NA" "NA" ...
- $ JWDP   : chr [1:9569] "NA" "NA" "NA" "NA" ...
- $ JWMNP  : int [1:9569] 0 0 0 0 0 0 0 20 0 0 ...
+ $ AGEP   : num [1:9569] 84 39 19 77 18 32 50 23 20 18 ...
+ $ PWGTP  : num [1:9569] 76 20 92 19 32 80 132 19 47 201 ...
+ $ GASP   : num [1:9569] 3 3 3 3 3 3 3 3 3 3 ...
+ $ GRPIP  : num [1:9569] 0 0 0 0 0 0 0 0 0 0 ...
+ $ JWAP   : num [1:9569] NA NA NA NA NA ...
+ $ JWDP   : num [1:9569] NA NA NA NA NA ...
+ $ JWMNP  : num [1:9569] 0 0 0 0 0 0 0 20 0 0 ...
  $ SEX    : Factor w/ 2 levels "Male","Female": 2 2 2 2 2 1 1 1 2 2 ...
  $ FER    : Factor w/ 3 levels "N/A (less than 15 years/greater than 50 years/ male)",..: 1 3 3 1 3 1 1 1 3 3 ...
  $ HHL    : Factor w/ 6 levels "N/A (GQ/vacant)",..: 1 1 1 1 1 1 1 1 1 1 ...
@@ -1166,51 +1177,161 @@ $both_GRPIP
  $ SCHL   : Factor w/ 25 levels "N/A (less than 3 years old)",..: 22 17 20 22 17 17 22 22 20 17 ...
  $ state  : Factor w/ 52 levels "Alabama/AL","Alaska/AK",..: 8 8 8 8 8 8 8 8 8 8 ...</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calls for every year - some missing variables, which is handled.</span></span>
-<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>data_2_m <span class="ot">&lt;-</span> <span class="fu">test_2_m</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calls for every year - some missing variables, which is handled.</span></span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>data_2_m <span class="ot">&lt;-</span> <span class="fu">test_2_m</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] "removing HISPEED from year 2010"
 [1] "removing variable HISPEED from year 2010"
 [1] "removing JWTRNS from year 2010"
 [1] "removing variable JWTRNS from year 2010"
-[1] "removing ST from year 2010"
-[1] "removing HISPEED from year 2011"
+[1] "removing ST from year 2010"</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: There were 2 warnings in `mutate()`.
+The first warning was:
+ℹ In argument: `across(...)`.
+Caused by warning:
+! NAs introduced by coercion
+ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "removing HISPEED from year 2011"
 [1] "removing variable HISPEED from year 2011"
 [1] "removing JWTRNS from year 2011"
 [1] "removing variable JWTRNS from year 2011"
-[1] "removing ST from year 2011"
-[1] "removing HISPEED from year 2012"
+[1] "removing ST from year 2011"</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: There were 2 warnings in `mutate()`.
+The first warning was:
+ℹ In argument: `across(...)`.
+Caused by warning:
+! NAs introduced by coercion
+ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "removing HISPEED from year 2012"
 [1] "removing variable HISPEED from year 2012"
 [1] "removing JWTRNS from year 2012"
 [1] "removing variable JWTRNS from year 2012"
-[1] "removing ST from year 2012"
-[1] "removing HISPEED from year 2013"
+[1] "removing ST from year 2012"</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: There were 2 warnings in `mutate()`.
+The first warning was:
+ℹ In argument: `across(...)`.
+Caused by warning:
+! NAs introduced by coercion
+ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "removing HISPEED from year 2013"
 [1] "removing variable HISPEED from year 2013"
 [1] "removing JWTRNS from year 2013"
 [1] "removing variable JWTRNS from year 2013"
-[1] "removing ST from year 2013"
-[1] "removing HISPEED from year 2014"
+[1] "removing ST from year 2013"</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: There were 2 warnings in `mutate()`.
+The first warning was:
+ℹ In argument: `across(...)`.
+Caused by warning:
+! NAs introduced by coercion
+ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "removing HISPEED from year 2014"
 [1] "removing variable HISPEED from year 2014"
 [1] "removing JWTRNS from year 2014"
 [1] "removing variable JWTRNS from year 2014"
-[1] "removing ST from year 2014"
-[1] "removing HISPEED from year 2015"
+[1] "removing ST from year 2014"</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: There were 2 warnings in `mutate()`.
+The first warning was:
+ℹ In argument: `across(...)`.
+Caused by warning:
+! NAs introduced by coercion
+ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "removing HISPEED from year 2015"
 [1] "removing variable HISPEED from year 2015"
 [1] "removing JWTRNS from year 2015"
 [1] "removing variable JWTRNS from year 2015"
-[1] "removing ST from year 2015"
-[1] "removing JWTRNS from year 2016"
-[1] "removing variable JWTRNS from year 2016"
-[1] "removing ST from year 2016"
-[1] "removing JWTRNS from year 2017"
-[1] "removing variable JWTRNS from year 2017"
-[1] "removing ST from year 2017"
-[1] "removing JWTRNS from year 2018"
-[1] "removing variable JWTRNS from year 2018"
-[1] "removing ST from year 2018"
-[1] "removing ST from year 2019"</code></pre>
+[1] "removing ST from year 2015"</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(data_2_m, <span class="at">max.level =</span> <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: There were 2 warnings in `mutate()`.
+The first warning was:
+ℹ In argument: `across(...)`.
+Caused by warning:
+! NAs introduced by coercion
+ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "removing JWTRNS from year 2016"
+[1] "removing variable JWTRNS from year 2016"
+[1] "removing ST from year 2016"</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: There were 2 warnings in `mutate()`.
+The first warning was:
+ℹ In argument: `across(...)`.
+Caused by warning:
+! NAs introduced by coercion
+ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "removing JWTRNS from year 2017"
+[1] "removing variable JWTRNS from year 2017"
+[1] "removing ST from year 2017"</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: There were 2 warnings in `mutate()`.
+The first warning was:
+ℹ In argument: `across(...)`.
+Caused by warning:
+! NAs introduced by coercion
+ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "removing JWTRNS from year 2018"
+[1] "removing variable JWTRNS from year 2018"
+[1] "removing ST from year 2018"</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: There were 2 warnings in `mutate()`.
+The first warning was:
+ℹ In argument: `across(...)`.
+Caused by warning:
+! NAs introduced by coercion
+ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "removing ST from year 2019"</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: There were 2 warnings in `mutate()`.
+The first warning was:
+ℹ In argument: `across(...)`.
+Caused by warning:
+! NAs introduced by coercion
+ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.
+There were 2 warnings in `mutate()`.
+The first warning was:
+ℹ In argument: `across(...)`.
+Caused by warning:
+! NAs introduced by coercion
+ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.
+There were 2 warnings in `mutate()`.
+The first warning was:
+ℹ In argument: `across(...)`.
+Caused by warning:
+! NAs introduced by coercion
+ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(data_2_m, <span class="at">max.level =</span> <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>List of 12
  $ 2010:List of 3
@@ -1273,110 +1394,118 @@ $both_GRPIP
 <section id="load-the-summarizing-functions.-one-is-for-countsmeansd-another-is-for-plotting." class="level4">
 <h4 class="anchored" data-anchor-id="load-the-summarizing-functions.-one-is-for-countsmeansd-another-is-for-plotting.">Load the summarizing functions. One is for counts/mean/sd, another is for plotting.</h4>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
-<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
-<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
-<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(quantreg)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb86"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb86-2"><a href="#cb86-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb86-3"><a href="#cb86-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb86-4"><a href="#cb86-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb86-5"><a href="#cb86-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(quantreg)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Loading required package: SparseM</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>summary_census <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
-<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>  x,</span>
-<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">categorical=</span><span class="fu">c</span>(<span class="st">"SEX"</span>,<span class="st">"FER"</span>,<span class="st">"HHL"</span>,<span class="st">"SCH"</span>,<span class="st">"SCHL"</span>, <span class="st">"HISPEED"</span>, <span class="st">"PWGTP"</span>,<span class="st">"REGION"</span>,<span class="st">"DIVISION"</span>,<span class="st">"STATE"</span>),</span>
-<span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">numerical=</span><span class="fu">c</span>(<span class="st">"GASP"</span>, <span class="st">"GRPIP"</span>,<span class="st">"AGEP"</span>, <span class="st">"JWMNP"</span>, <span class="st">"PWGTP"</span>) <span class="co"># </span><span class="al">TODO</span><span class="co"> JWAP and JWDP</span></span>
-<span id="cb67-5"><a href="#cb67-5" aria-hidden="true" tabindex="-1"></a>) {</span>
-<span id="cb67-6"><a href="#cb67-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Finding mean/sd/counts for numerical and categorical data</span></span>
-<span id="cb67-7"><a href="#cb67-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb67-8"><a href="#cb67-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span>(<span class="st">"census"</span> <span class="sc">%in%</span> <span class="fu">class</span>(x))) {</span>
-<span id="cb67-9"><a href="#cb67-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Input must be a census object"</span>)</span>
-<span id="cb67-10"><a href="#cb67-10" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb67-11"><a href="#cb67-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb67-12"><a href="#cb67-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># from the inputs, split into categorical and numerical data</span></span>
-<span id="cb67-13"><a href="#cb67-13" aria-hidden="true" tabindex="-1"></a>  new_data_cat <span class="ot">&lt;-</span> x[<span class="fu">names</span>(x) <span class="sc">%in%</span> categorical]</span>
-<span id="cb67-14"><a href="#cb67-14" aria-hidden="true" tabindex="-1"></a>  new_data_num <span class="ot">&lt;-</span> x[<span class="fu">names</span>(x) <span class="sc">%in%</span> numerical]</span>
-<span id="cb67-15"><a href="#cb67-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb67-16"><a href="#cb67-16" aria-hidden="true" tabindex="-1"></a>  cat_counts_result <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb67-17"><a href="#cb67-17" aria-hidden="true" tabindex="-1"></a>  num_mean_sd_result <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb67-18"><a href="#cb67-18" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb67-19"><a href="#cb67-19" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (col <span class="cf">in</span> <span class="fu">names</span>(new_data_cat)) {</span>
-<span id="cb67-20"><a href="#cb67-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (col <span class="sc">==</span> <span class="st">"PWGTP"</span>) {</span>
-<span id="cb67-21"><a href="#cb67-21" aria-hidden="true" tabindex="-1"></a>      <span class="cf">next</span></span>
-<span id="cb67-22"><a href="#cb67-22" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb67-23"><a href="#cb67-23" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb67-24"><a href="#cb67-24" aria-hidden="true" tabindex="-1"></a>    cat_counts_result[[col]] <span class="ot">&lt;-</span> new_data_cat <span class="sc">|&gt;</span></span>
-<span id="cb67-25"><a href="#cb67-25" aria-hidden="true" tabindex="-1"></a>      <span class="fu">group_by</span>(<span class="sc">!!</span><span class="fu">sym</span>(col)) <span class="sc">|&gt;</span></span>
-<span id="cb67-26"><a href="#cb67-26" aria-hidden="true" tabindex="-1"></a>      <span class="fu">summarize</span>(<span class="at">count=</span><span class="fu">sum</span>(PWGTP))</span>
-<span id="cb67-27"><a href="#cb67-27" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb67-28"><a href="#cb67-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb67-29"><a href="#cb67-29" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (col <span class="cf">in</span> <span class="fu">names</span>(new_data_num)) {</span>
-<span id="cb67-30"><a href="#cb67-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (col <span class="sc">==</span> <span class="st">"PWGTP"</span>) {</span>
-<span id="cb67-31"><a href="#cb67-31" aria-hidden="true" tabindex="-1"></a>      <span class="cf">next</span></span>
-<span id="cb67-32"><a href="#cb67-32" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb67-33"><a href="#cb67-33" aria-hidden="true" tabindex="-1"></a>    num_mean_sd_result[[col]] <span class="ot">&lt;-</span> new_data_num <span class="sc">|&gt;</span></span>
-<span id="cb67-34"><a href="#cb67-34" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(<span class="at">new_mult =</span> <span class="sc">!!</span><span class="fu">sym</span>(col) <span class="sc">*</span> PWGTP) <span class="sc">|&gt;</span></span>
-<span id="cb67-35"><a href="#cb67-35" aria-hidden="true" tabindex="-1"></a>      <span class="fu">summarize</span>(<span class="at">mean=</span><span class="fu">sum</span>(new_mult) <span class="sc">/</span> <span class="fu">sum</span>(PWGTP),</span>
-<span id="cb67-36"><a href="#cb67-36" aria-hidden="true" tabindex="-1"></a>                <span class="at">sd=</span><span class="fu">sqrt</span>(<span class="fu">sum</span>(PWGTP <span class="sc">*</span> (<span class="sc">!!</span><span class="fu">sym</span>(col) <span class="sc">-</span> mean)<span class="sc">^</span><span class="dv">2</span>) <span class="sc">/</span> <span class="fu">sum</span>(PWGTP)))</span>
-<span id="cb67-37"><a href="#cb67-37" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb67-38"><a href="#cb67-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb67-39"><a href="#cb67-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> (<span class="fu">list</span>(<span class="at">cat_results=</span>cat_counts_result, <span class="at">num_results=</span>num_mean_sd_result))</span>
-<span id="cb67-40"><a href="#cb67-40" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb67-41"><a href="#cb67-41" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb67-42"><a href="#cb67-42" aria-hidden="true" tabindex="-1"></a><span class="co"># # We chose to investigate the populations educational level base on age. We were interested in showing people who are typical school age range.</span></span>
-<span id="cb67-43"><a href="#cb67-43" aria-hidden="true" tabindex="-1"></a><span class="co"># parsed2&lt;- parsed %&gt;%</span></span>
-<span id="cb67-44"><a href="#cb67-44" aria-hidden="true" tabindex="-1"></a><span class="co">#   filter(AGEP&lt;=40 &amp; AGEP &gt;=5)%&gt;%</span></span>
-<span id="cb67-45"><a href="#cb67-45" aria-hidden="true" tabindex="-1"></a><span class="co">#   ggplot(aes(x =SCH, y =AGEP, weight= PWGTP,fill = SCH, color = SCH))+</span></span>
-<span id="cb67-46"><a href="#cb67-46" aria-hidden="true" tabindex="-1"></a><span class="co">#   geom_boxplot()</span></span>
-<span id="cb67-47"><a href="#cb67-47" aria-hidden="true" tabindex="-1"></a><span class="co"># print(parsed2)</span></span>
-<span id="cb67-48"><a href="#cb67-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb67-49"><a href="#cb67-49" aria-hidden="true" tabindex="-1"></a>plot_census <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">categorical=</span><span class="st">"SCH"</span>, <span class="at">numerical=</span><span class="st">"AGEP"</span>) {</span>
-<span id="cb67-50"><a href="#cb67-50" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span>(<span class="st">"census"</span> <span class="sc">%in%</span> <span class="fu">class</span>(x))) {</span>
-<span id="cb67-51"><a href="#cb67-51" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Input must be a census object"</span>)</span>
-<span id="cb67-52"><a href="#cb67-52" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb67-53"><a href="#cb67-53" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb67-54"><a href="#cb67-54" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(categorical) <span class="sc">!=</span> <span class="dv">1</span> <span class="sc">|</span> <span class="fu">length</span>(numerical) <span class="sc">!=</span> <span class="dv">1</span>) {</span>
-<span id="cb67-55"><a href="#cb67-55" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Only one categorical and one numerical variable can be plotted"</span>)</span>
-<span id="cb67-56"><a href="#cb67-56" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb67-57"><a href="#cb67-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb67-58"><a href="#cb67-58" aria-hidden="true" tabindex="-1"></a>  x <span class="sc">|&gt;</span></span>
-<span id="cb67-59"><a href="#cb67-59" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span><span class="sc">!!</span><span class="fu">sym</span>(categorical), <span class="at">y=</span><span class="sc">!!</span><span class="fu">sym</span>(numerical), <span class="at">weight=</span>PWGTP, <span class="at">fill=</span><span class="sc">!!</span><span class="fu">sym</span>(categorical), <span class="at">color=</span><span class="sc">!!</span><span class="fu">sym</span>(categorical))) <span class="sc">+</span></span>
-<span id="cb67-60"><a href="#cb67-60" aria-hidden="true" tabindex="-1"></a>      <span class="fu">geom_boxplot</span>()</span>
-<span id="cb67-61"><a href="#cb67-61" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb88"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a>summary_census <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb88-2"><a href="#cb88-2" aria-hidden="true" tabindex="-1"></a>  x,</span>
+<span id="cb88-3"><a href="#cb88-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">categorical=</span><span class="fu">c</span>(<span class="st">"SEX"</span>,<span class="st">"FER"</span>,<span class="st">"HHL"</span>,<span class="st">"SCH"</span>,<span class="st">"SCHL"</span>, <span class="st">"HISPEED"</span>, <span class="st">"PWGTP"</span>,<span class="st">"REGION"</span>,<span class="st">"DIVISION"</span>,<span class="st">"STATE"</span>),</span>
+<span id="cb88-4"><a href="#cb88-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">numerical=</span><span class="fu">c</span>(<span class="st">"GASP"</span>, <span class="st">"GRPIP"</span>,<span class="st">"AGEP"</span>, <span class="st">"JWMNP"</span>, <span class="st">"PWGTP"</span>, <span class="st">"JWAP"</span>, <span class="st">"JWDP"</span>)</span>
+<span id="cb88-5"><a href="#cb88-5" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb88-6"><a href="#cb88-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Finding mean/sd/counts for numerical and categorical data</span></span>
+<span id="cb88-7"><a href="#cb88-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb88-8"><a href="#cb88-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span>(<span class="st">"census"</span> <span class="sc">%in%</span> <span class="fu">class</span>(x))) {</span>
+<span id="cb88-9"><a href="#cb88-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Input must be a census object"</span>)</span>
+<span id="cb88-10"><a href="#cb88-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb88-11"><a href="#cb88-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb88-12"><a href="#cb88-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># from the inputs, split into categorical and numerical data</span></span>
+<span id="cb88-13"><a href="#cb88-13" aria-hidden="true" tabindex="-1"></a>  new_data_cat <span class="ot">&lt;-</span> x[<span class="fu">names</span>(x) <span class="sc">%in%</span> categorical]</span>
+<span id="cb88-14"><a href="#cb88-14" aria-hidden="true" tabindex="-1"></a>  new_data_num <span class="ot">&lt;-</span> x[<span class="fu">names</span>(x) <span class="sc">%in%</span> numerical]</span>
+<span id="cb88-15"><a href="#cb88-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb88-16"><a href="#cb88-16" aria-hidden="true" tabindex="-1"></a>  cat_counts_result <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb88-17"><a href="#cb88-17" aria-hidden="true" tabindex="-1"></a>  num_mean_sd_result <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb88-18"><a href="#cb88-18" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb88-19"><a href="#cb88-19" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (col <span class="cf">in</span> <span class="fu">names</span>(new_data_cat)) {</span>
+<span id="cb88-20"><a href="#cb88-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (col <span class="sc">==</span> <span class="st">"PWGTP"</span>) {</span>
+<span id="cb88-21"><a href="#cb88-21" aria-hidden="true" tabindex="-1"></a>      <span class="cf">next</span></span>
+<span id="cb88-22"><a href="#cb88-22" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb88-23"><a href="#cb88-23" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb88-24"><a href="#cb88-24" aria-hidden="true" tabindex="-1"></a>    cat_counts_result[[col]] <span class="ot">&lt;-</span> new_data_cat <span class="sc">|&gt;</span></span>
+<span id="cb88-25"><a href="#cb88-25" aria-hidden="true" tabindex="-1"></a>      <span class="fu">group_by</span>(<span class="sc">!!</span><span class="fu">sym</span>(col)) <span class="sc">|&gt;</span></span>
+<span id="cb88-26"><a href="#cb88-26" aria-hidden="true" tabindex="-1"></a>      <span class="fu">summarize</span>(<span class="at">count=</span><span class="fu">sum</span>(PWGTP))</span>
+<span id="cb88-27"><a href="#cb88-27" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb88-28"><a href="#cb88-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb88-29"><a href="#cb88-29" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (col <span class="cf">in</span> <span class="fu">names</span>(new_data_num)) {</span>
+<span id="cb88-30"><a href="#cb88-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (col <span class="sc">==</span> <span class="st">"PWGTP"</span>) {</span>
+<span id="cb88-31"><a href="#cb88-31" aria-hidden="true" tabindex="-1"></a>      <span class="cf">next</span></span>
+<span id="cb88-32"><a href="#cb88-32" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb88-33"><a href="#cb88-33" aria-hidden="true" tabindex="-1"></a>    num_mean_sd_result[[col]] <span class="ot">&lt;-</span> new_data_num <span class="sc">|&gt;</span></span>
+<span id="cb88-34"><a href="#cb88-34" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(<span class="at">new_mult =</span> <span class="sc">!!</span><span class="fu">sym</span>(col) <span class="sc">*</span> PWGTP) <span class="sc">|&gt;</span></span>
+<span id="cb88-35"><a href="#cb88-35" aria-hidden="true" tabindex="-1"></a>      <span class="fu">summarize</span>(<span class="at">mean=</span><span class="fu">sum</span>(new_mult) <span class="sc">/</span> <span class="fu">sum</span>(PWGTP),</span>
+<span id="cb88-36"><a href="#cb88-36" aria-hidden="true" tabindex="-1"></a>                <span class="at">sd=</span><span class="fu">sqrt</span>(<span class="fu">sum</span>(PWGTP <span class="sc">*</span> (<span class="sc">!!</span><span class="fu">sym</span>(col) <span class="sc">-</span> mean)<span class="sc">^</span><span class="dv">2</span>) <span class="sc">/</span> <span class="fu">sum</span>(PWGTP)))</span>
+<span id="cb88-37"><a href="#cb88-37" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb88-38"><a href="#cb88-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb88-39"><a href="#cb88-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> (<span class="fu">list</span>(<span class="at">cat_results=</span>cat_counts_result, <span class="at">num_results=</span>num_mean_sd_result))</span>
+<span id="cb88-40"><a href="#cb88-40" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb88-41"><a href="#cb88-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb88-42"><a href="#cb88-42" aria-hidden="true" tabindex="-1"></a><span class="co"># # We chose to investigate the populations educational level base on age. We were interested in showing people who are typical school age range.</span></span>
+<span id="cb88-43"><a href="#cb88-43" aria-hidden="true" tabindex="-1"></a><span class="co"># parsed2&lt;- parsed %&gt;%</span></span>
+<span id="cb88-44"><a href="#cb88-44" aria-hidden="true" tabindex="-1"></a><span class="co">#   filter(AGEP&lt;=40 &amp; AGEP &gt;=5)%&gt;%</span></span>
+<span id="cb88-45"><a href="#cb88-45" aria-hidden="true" tabindex="-1"></a><span class="co">#   ggplot(aes(x =SCH, y =AGEP, weight= PWGTP,fill = SCH, color = SCH))+</span></span>
+<span id="cb88-46"><a href="#cb88-46" aria-hidden="true" tabindex="-1"></a><span class="co">#   geom_boxplot()</span></span>
+<span id="cb88-47"><a href="#cb88-47" aria-hidden="true" tabindex="-1"></a><span class="co"># print(parsed2)</span></span>
+<span id="cb88-48"><a href="#cb88-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb88-49"><a href="#cb88-49" aria-hidden="true" tabindex="-1"></a>plot_census <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">categorical=</span><span class="st">"SCH"</span>, <span class="at">numerical=</span><span class="st">"AGEP"</span>) {</span>
+<span id="cb88-50"><a href="#cb88-50" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span>(<span class="st">"census"</span> <span class="sc">%in%</span> <span class="fu">class</span>(x))) {</span>
+<span id="cb88-51"><a href="#cb88-51" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Input must be a census object"</span>)</span>
+<span id="cb88-52"><a href="#cb88-52" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb88-53"><a href="#cb88-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb88-54"><a href="#cb88-54" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(categorical) <span class="sc">!=</span> <span class="dv">1</span> <span class="sc">|</span> <span class="fu">length</span>(numerical) <span class="sc">!=</span> <span class="dv">1</span>) {</span>
+<span id="cb88-55"><a href="#cb88-55" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Only one categorical and one numerical variable can be plotted"</span>)</span>
+<span id="cb88-56"><a href="#cb88-56" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb88-57"><a href="#cb88-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb88-58"><a href="#cb88-58" aria-hidden="true" tabindex="-1"></a>  x <span class="sc">|&gt;</span></span>
+<span id="cb88-59"><a href="#cb88-59" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span><span class="sc">!!</span><span class="fu">sym</span>(categorical), <span class="at">y=</span><span class="sc">!!</span><span class="fu">sym</span>(numerical), <span class="at">weight=</span>PWGTP, <span class="at">fill=</span><span class="sc">!!</span><span class="fu">sym</span>(categorical), <span class="at">color=</span><span class="sc">!!</span><span class="fu">sym</span>(categorical))) <span class="sc">+</span></span>
+<span id="cb88-60"><a href="#cb88-60" aria-hidden="true" tabindex="-1"></a>      <span class="fu">geom_boxplot</span>()</span>
+<span id="cb88-61"><a href="#cb88-61" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="load-the-example-usages." class="level4">
 <h4 class="anchored" data-anchor-id="load-the-example-usages.">Load the example usages.</h4>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb68"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"src/summarizing.R"</span>)</span>
-<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"src/main.R"</span>)</span>
-<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"test/test_main.R"</span>)</span>
-<span id="cb68-4"><a href="#cb68-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb68-5"><a href="#cb68-5" aria-hidden="true" tabindex="-1"></a>test_1_s <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
-<span id="cb68-6"><a href="#cb68-6" aria-hidden="true" tabindex="-1"></a>  parsed <span class="ot">&lt;-</span> <span class="fu">test_1_m</span>()<span class="sc">$</span>parsed</span>
-<span id="cb68-7"><a href="#cb68-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> (<span class="fu">summary_census</span>(parsed))</span>
-<span id="cb68-8"><a href="#cb68-8" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb68-9"><a href="#cb68-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb68-10"><a href="#cb68-10" aria-hidden="true" tabindex="-1"></a>test_2_s <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
-<span id="cb68-11"><a href="#cb68-11" aria-hidden="true" tabindex="-1"></a>  parsed <span class="ot">&lt;-</span> <span class="fu">test_1_m</span>()<span class="sc">$</span>parsed</span>
-<span id="cb68-12"><a href="#cb68-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_census</span>(parsed)</span>
-<span id="cb68-13"><a href="#cb68-13" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"src/summarizing.R"</span>)</span>
+<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"src/main.R"</span>)</span>
+<span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"test/test_main.R"</span>)</span>
+<span id="cb89-4"><a href="#cb89-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb89-5"><a href="#cb89-5" aria-hidden="true" tabindex="-1"></a>test_1_s <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb89-6"><a href="#cb89-6" aria-hidden="true" tabindex="-1"></a>  parsed <span class="ot">&lt;-</span> <span class="fu">test_1_m</span>()<span class="sc">$</span>parsed</span>
+<span id="cb89-7"><a href="#cb89-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> (<span class="fu">summary_census</span>(parsed))</span>
+<span id="cb89-8"><a href="#cb89-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb89-9"><a href="#cb89-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb89-10"><a href="#cb89-10" aria-hidden="true" tabindex="-1"></a>test_2_s <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb89-11"><a href="#cb89-11" aria-hidden="true" tabindex="-1"></a>  parsed <span class="ot">&lt;-</span> <span class="fu">test_1_m</span>()<span class="sc">$</span>parsed</span>
+<span id="cb89-12"><a href="#cb89-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_census</span>(parsed)</span>
+<span id="cb89-13"><a href="#cb89-13" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Gives a view of the summary values.</span></span>
-<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a><span class="fu">test_1_s</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb90"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Gives a view of the summary values.</span></span>
+<span id="cb90-2"><a href="#cb90-2" aria-hidden="true" tabindex="-1"></a><span class="fu">test_1_s</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: There were 2 warnings in `mutate()`.
+The first warning was:
+ℹ In argument: `across(...)`.
+Caused by warning:
+! NAs introduced by coercion
+ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.</code></pre>
+</div>
 <div class="cell-output cell-output-stdout">
 <pre><code>$cat_results
 $cat_results$SEX
 # A tibble: 2 × 2
   SEX     count
-  &lt;fct&gt;   &lt;int&gt;
+  &lt;fct&gt;   &lt;dbl&gt;
 1 Male   488442
 2 Female 520323
 
 $cat_results$FER
 # A tibble: 3 × 2
   FER                                                   count
-  &lt;fct&gt;                                                 &lt;int&gt;
+  &lt;fct&gt;                                                 &lt;dbl&gt;
 1 N/A (less than 15 years/greater than 50 years/ male) 785329
 2 Yes                                                   10669
 3 No                                                   212767
@@ -1384,7 +1513,7 @@ $cat_results$FER
 $cat_results$HHL
 # A tibble: 6 × 2
   HHL                                 count
-  &lt;fct&gt;                               &lt;int&gt;
+  &lt;fct&gt;                               &lt;dbl&gt;
 1 N/A (GQ/vacant)                     22688
 2 English Only                       796054
 3 Spanish                             95801
@@ -1395,7 +1524,7 @@ $cat_results$HHL
 $cat_results$HISPEED
 # A tibble: 3 × 2
   HISPEED                                         count
-  &lt;fct&gt;                                           &lt;int&gt;
+  &lt;fct&gt;                                           &lt;dbl&gt;
 1 N/A (GQ/vacant/no paid access to the internet)  74950
 2 Yes                                            830510
 3 No                                             103305
@@ -1403,7 +1532,7 @@ $cat_results$HISPEED
 $cat_results$SCH
 # A tibble: 4 × 2
   SCH                                            count
-  &lt;fct&gt;                                          &lt;int&gt;
+  &lt;fct&gt;                                          &lt;dbl&gt;
 1 N/A (less than 3 years old)                    20751
 2 No, has not attended in the last 3 months     755797
 3 Yes, public school or public college          195091
@@ -1412,7 +1541,7 @@ $cat_results$SCH
 $cat_results$SCHL
 # A tibble: 25 × 2
    SCHL                        count
-   &lt;fct&gt;                       &lt;int&gt;
+   &lt;fct&gt;                       &lt;dbl&gt;
  1 N/A (less than 3 years old) 20751
  2 No schooling completed      29639
  3 Nursery school, preschool   16425
@@ -1445,14 +1574,34 @@ $num_results$GRPIP
   &lt;dbl&gt; &lt;dbl&gt;
 1  7.84  19.1
 
+$num_results$JWAP
+# A tibble: 1 × 2
+   mean    sd
+  &lt;dbl&gt; &lt;dbl&gt;
+1    NA    NA
+
+$num_results$JWDP
+# A tibble: 1 × 2
+   mean    sd
+  &lt;dbl&gt; &lt;dbl&gt;
+1    NA    NA
+
 $num_results$JWMNP
 # A tibble: 1 × 2
    mean    sd
   &lt;dbl&gt; &lt;dbl&gt;
 1  10.8  19.4</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plots the default AGEP and SCH</span></span>
-<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a><span class="fu">test_2_s</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb93"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plots the default AGEP and SCH</span></span>
+<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a><span class="fu">test_2_s</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: There were 2 warnings in `mutate()`.
+The first warning was:
+ℹ In argument: `across(...)`.
+Caused by warning:
+! NAs introduced by coercion
+ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.</code></pre>
+</div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -1466,8 +1615,35 @@ $num_results$JWMNP
 </section>
 <section id="investigating" class="level2">
 <h2 class="anchored" data-anchor-id="investigating">Investigating</h2>
+<section id="the-default-plot-above-is-the-result-of-investigating-something-interesting.-when-looking-at-agep-against-sch-we-get-to-see-the-different-types-of-attendance-separated-out-by-age." class="level3">
+<h3 class="anchored" data-anchor-id="the-default-plot-above-is-the-result-of-investigating-something-interesting.-when-looking-at-agep-against-sch-we-get-to-see-the-different-types-of-attendance-separated-out-by-age.">The default plot above is the result of investigating something interesting. When looking at AGEP against SCH, we get to see the different types of attendance separated out by age.</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb95"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a><span class="fu">test_2_s</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: There were 2 warnings in `mutate()`.
+The first warning was:
+ℹ In argument: `across(...)`.
+Caused by warning:
+! NAs introduced by coercion
+ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project1_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<section id="less-than-3-years-old-was-filtered-out-as-it-is-quite-uninteresting-but-the-default-plot-has-not-had-that-capability-put-in.-all-the-count-for-less-than-3-years-old-falls-into-the-ages-0-3." class="level4">
+<h4 class="anchored" data-anchor-id="less-than-3-years-old-was-filtered-out-as-it-is-quite-uninteresting-but-the-default-plot-has-not-had-that-capability-put-in.-all-the-count-for-less-than-3-years-old-falls-into-the-ages-0-3.">Less than 3 years old was filtered out as it is quite uninteresting, but the default plot has not had that capability put in. All the count for less than 3 years old falls into the ages 0-3.</h4>
+</section>
+<section id="more-interesting-is-the-comparison-of-the-other-3.-those-that-have-not-attended-school-recently-are-as-expected-the-older-population-generally.-the-thought-was-that-the-older-population-tended-to-go-to-private-schools-more-with-the-primary-driver-being-online-course-offerings-and-part-time-attendance.-this-is-consistent-with-the-data-plot." class="level4">
+<h4 class="anchored" data-anchor-id="more-interesting-is-the-comparison-of-the-other-3.-those-that-have-not-attended-school-recently-are-as-expected-the-older-population-generally.-the-thought-was-that-the-older-population-tended-to-go-to-private-schools-more-with-the-primary-driver-being-online-course-offerings-and-part-time-attendance.-this-is-consistent-with-the-data-plot.">More interesting is the comparison of the other 3. Those that have not attended school recently are, as expected, the older population generally. The thought was that the older population tended to go to private schools more, with the primary driver being online course offerings and part-time attendance. This is consistent with the data plot.</h4>
 
 
+</section>
+</section>
 </section>
 
 </main> <!-- /main -->

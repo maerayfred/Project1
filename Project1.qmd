@@ -180,3 +180,13 @@ test_2_s()
 
 ## Investigating
 
+### The default plot above is the result of investigating something interesting. When looking at AGEP against SCH, we get to see the different types of attendance separated out by age.
+
+```{r}
+test_2_s()
+```
+
+
+#### Less than 3 years old was filtered out as it is quite uninteresting, but the default plot has not had that capability put in. All the count for less than 3 years old falls into the ages 0-3.
+
+#### More interesting is the comparison of the other 3. Those that have not attended school recently are, as expected, the older population generally. The thought was that the older population tended to go to private schools more, with the primary driver being online course offerings and part-time attendance. This is consistent with the data plot.

@@ -7,7 +7,7 @@ library(quantreg)
 summary_census <- function(
   x,
   categorical=c("SEX","FER","HHL","SCH","SCHL", "HISPEED", "PWGTP","REGION","DIVISION","STATE"),
-  numerical=c("GASP", "GRPIP","AGEP", "JWMNP", "PWGTP") # TODO JWAP and JWDP
+  numerical=c("GASP", "GRPIP","AGEP", "JWMNP", "PWGTP", "JWAP", "JWDP")
 ) {
   # Finding mean/sd/counts for numerical and categorical data
 

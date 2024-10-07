@@ -25,9 +25,3 @@ test_2_m <- function() {
   )
   return (return_data)
 }
-
-# data_1_m <- test_1_m()
-# data_1_m$URL
-# str(data_1_m$parsed)
-# data_2_m <- test_2_m()
-# str(data_2_m, max.level = 2)
